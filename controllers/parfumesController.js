@@ -90,7 +90,7 @@ const indexRecents = (req, res) => {
 // NOTE PER SUCCESSIVE REST API, SOPRATUTTO LA SHOW, TUTTO QUESTO NON SERVIRÁ, CON UNA INNER JOIN SI PUÓ RISALIRE ALLE INFO CORRELATE AL PRODOTTO,
 //  AVREMO ALTRI PARAMETRI A CUI APPOGGIARCI PER FARLO, NON SARÁ(CREDO) NECESSARIA TUTTA QUESTA LOGICA (CHE SICURAMENTE É OTTIMIZZABILE)
 
-const show = (req, res) => {
+const showParfume = (req, res) => {
   const id = req.params.id;
   const productSql = `
     SELECT 
@@ -150,5 +150,5 @@ module.exports = {
   index,
   indexBestSellers,
   indexRecents,
-  show,
+  showParfume,
 };
