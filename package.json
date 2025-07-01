@@ -1,0 +1,23 @@
+{
+  "name": "webapp-express",
+  "version": "1.0.0",
+  "description": "Backend per l'esercizio di riepilogo finale",
+  "main": "app.js",
+  "scripts": {
+    "dev": "node --watch app.js"
+  },
+  "keywords": [
+    "Movies",
+    "Boolean",
+    "Express",
+    "sql"
+  ],
+  "author": "Federico Bacci",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "mysql2": "^3.14.1"
+  }
+}
