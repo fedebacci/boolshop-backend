@@ -9,6 +9,6 @@ parfumesRouter.get("/bestsellers", parfumesController.indexBestSellers);
 parfumesRouter.get("/recents", parfumesController.indexRecents);
 
 // SHOW
-parfumesRouter.get("/:id", parfumesController.show);
+parfumesRouter.get("/:id", parfumesController.showParfume);
 
 module.exports = parfumesRouter;
