@@ -3,13 +3,82 @@ const connection = require('../db/connection');
 
 
 const index = (req, res) => {
+  const sql = `
+    SELECT 
+      products.*,      
+      brands.name AS brand_name, 
+      brands.logo AS brand_logo,
+      discount_codes.amount AS discount_amount
+    FROM products
 
+    INNER JOIN brands 
+    ON products.brand_id = brands.id
+
+    LEFT JOIN discount_codes 
+    ON discount_codes.id = products.discount_id
+
+    ORDER BY products.id ASC
+
+  `;
+
+  connection.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+
+    res.json(results);
+  });
 };
 
 
+// NOTE PER SUCCESSIVE REST API, SOPRATUTTO LA SHOW, TUTTO QUESTO NON SERVIRÁ, CON UNA INNER JOIN SI PUÓ RISALIRE ALLE INFO CORRELATE AL PRODOTTO,
+//  AVREMO ALTRI PARAMETRI A CUI APPOGGIARCI PER FARLO, NON SARÁ(CREDO) NECESSARIA TUTTA QUESTA LOGICA (CHE SICURAMENTE É OTTIMIZZABILE)
 
 const show = (req, res) => {
+  const id = req.params.id;
+  const productSql = `
+    SELECT 
+      products.*,      
+      brands.name AS brand_name, 
+      brands.logo AS brand_logo,
+      discount_codes.amount AS discount_amount
 
+    FROM products
+
+    INNER JOIN brands 
+    ON products.brand_id = brands.id
+
+    LEFT JOIN discount_codes 
+    ON discount_codes.id = products.discount_id
+    
+    WHERE products.id = ?
+  `;
+
+  const ingredientSql = `
+  SELECT ingredients.*, 
+  ingredients_products.percentage AS percentage
+  FROM ingredients
+
+  INNER JOIN ingredients_products 
+  ON ingredients_products.ingredient_id = ingredients.id
+
+  WHERE ingredients_products.product_id = ?
+  `;
+
+  connection.query(productSql, [id], (err, productResult) => {
+    if (err) return res.status(500).json({ error: err });
+    if (productResult.length === 0)
+      return res.status(500).json({ error: "Product not found" });
+    const product = productResult[0];
+    connection.query(ingredientSql, [id], (err, ingredientResult) => {
+      if (err) return res.status(500).json({ error: err });
+      product.ingredients = ingredientResult.map((i) => {
+        return {
+          name: i.name,
+          percentage: i.percentage,
+        };
+      });
+      res.json(product);
+    });
+  });
 };
 
 
@@ -31,9 +100,9 @@ const show = (req, res) => {
 // * 
 const { APP_URL, APP_PORT } = process.env;
 const host = APP_PORT ? `${APP_URL}:${APP_PORT}` : APP_URL;
-const formatImage = (image) => {
-    return image ? `${host}/images/parfumes/${image}` : `${host}/images/parfumes/placeholder.jpg`;
-};
+// const formatImage = (image) => {
+//     return image ? `${host}/images/parfumes/${image}` : `${host}/images/parfumes/placeholder.jpg`;
+// };
 
 
 
