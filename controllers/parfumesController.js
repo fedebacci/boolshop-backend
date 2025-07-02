@@ -208,7 +208,7 @@ const showParfume = (req, res) => {
     WHERE products.id = ?
   `;
 
-  const ingredientSql = `
+  const ingredientsSql = `
     SELECT ingredients.*, 
     ingredients_products.percentage AS percentage
     FROM ingredients
@@ -224,9 +224,11 @@ const showParfume = (req, res) => {
     if (productResult.length === 0)
       return res.status(500).json({ error: "Product not found" });
     const product = productResult[0];
-    connection.query(ingredientSql, [id], (err, ingredientResult) => {
+    connection.query(ingredientsSql, [id], (err, ingredientsResult) => {
       if (err) return res.status(500).json({ error: err });
-      product.ingredients = ingredientResult.map((i) => {
+      if (productResult.length === 0)
+      return res.status(404).json({ error: `Ingredients not found for product: ${id}.` });
+      product.ingredients = ingredientsResult.map((i) => {
         return {
           name: i.name,
           percentage: i.percentage,
@@ -252,7 +254,7 @@ const cartAdd = (req, res) => {
   console.log("product_id", product_id);
   console.log("typeof(product_id)", typeof(product_id));
   
-  const client_cart = appCarts.find(cart => cart.id === cart_id)
+  const client_cart = appCarts.find(cart => cart.id === cart_id);
   console.log("client_cart", client_cart);
 
 
@@ -263,6 +265,11 @@ const cartAdd = (req, res) => {
           description: `Carello non trovato`,
       });
   }
+
+
+
+  const isProductInCart = client_cart.products.find(product => product.id === product_id) === undefined ? false : true;
+  console.log("isProductInCart", isProductInCart);
 
 
   const productSql = `
@@ -285,7 +292,7 @@ const cartAdd = (req, res) => {
     ORDER BY products.id ASC
   `;
 
-  const ingredientSql = `
+  const ingredientsSql = `
     SELECT ingredients.*, 
     ingredients_products.percentage AS percentage
     FROM ingredients
@@ -300,11 +307,13 @@ const cartAdd = (req, res) => {
   connection.query(productSql, [product_id], (err, productResult) => {
     if (err) return res.status(500).json({ error: err });
     if (productResult.length === 0)
-      return res.status(500).json({ error: "Product not found" });
+      return res.status(404).json({ error: `Product ${product_id} not found` });
     const product = productResult[0];
-    connection.query(ingredientSql, [product_id], (err, ingredientResult) => {
+    connection.query(ingredientsSql, [product_id], (err, ingredientsResult) => {
       if (err) return res.status(500).json({ error: err });
-      product.ingredients = ingredientResult.map((ingredient) => {
+      if (productResult.length === 0)
+      return res.status(404).json({ error: `Ingredients not found for product: ${product_id}.` });
+      product.ingredients = ingredientsResult.map((ingredient) => {
         return {
           name: ingredient.name,
           percentage: ingredient.percentage,
@@ -315,7 +324,7 @@ const cartAdd = (req, res) => {
       client_cart.products.push(product);
       res
         .json({   
-          description: `cartAdd (${cart_id})`,
+          description: `cartAdd (${cart_id} - product_id: ${product_id})`,
           client_cart
         });
 
@@ -331,8 +340,7 @@ const cartRemove = (req, res) => {
   const { cart_id, product_id } = req.body;
 
 
-  const client_cart = appCarts.find(cart => cart.id === cart_id)
-  console.log("client_cart", client_cart);
+  const client_cart = appCarts.find(cart => cart.id === cart_id);
 
 
   if (!client_cart) {
@@ -344,6 +352,19 @@ const cartRemove = (req, res) => {
   }
 
 
+
+  // const isProductInCart = client_cart.products.find(product => product.id === product_id) === undefined ? false : true;
+  const isProductInCart = client_cart.products.find(product => product.id === product_id);
+
+  if (isProductInCart) {
+    client_cart.products.splice(client_cart.products.indexOf(isProductInCart), 1);
+  } else {
+    return res
+      .status(404)
+      .json({
+        description: `Prodotto ${product_id} non trovato nel carrello: ${cart_id}. Impossibile cancellare il prodotto`,
+      })
+  }
 
 
   res
