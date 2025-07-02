@@ -1,13 +1,48 @@
 const connection = require("../db/connection");
 
+
+
+const appCarts = [
+  {
+    id: "ABCDE",
+    products: []
+  },
+  {
+    id: "FGHIJ",
+  },
+  {
+    id: "KLMNO",
+    products: []
+  },
+  {
+    id: "PQRST",
+    products: []
+  },
+  {
+    id: "UVWXY",
+    products: []
+  },
+];
+
+
+
 // INDEX
-
 // LOGICA PER LA INDEX DI TUTTI I PRODOTTI, CON ANNESSE INFORMAZIONI SUL NOME DEL BRAND, LOGO DEL BRAND E SCONTO APPLICATO SUL SINGOLO PRODOTTO, SE ESISTENTE
-
 const index = (req, res) => {
-  const sql = `
+
+
+  // # FILTRI FUNZIONANTI
+  let { product_name, brand_id, gender, max_price, min_price } = req.query;
+  // # FILTRI DA AGGIUNGERE:
+  // #  * discount_id (filtro nullo o presente, colonna nulla o presente --> 3 casi: si filtro si col, si filtro no col, no filtro)
+  // #  * size_ml (o name)
+  // #  * discount_amount ? (Forse dovrei fare seconda richiesta a db? Le prop che mi servirebbero arrivano da prima risposta del db)
+
+
+  const sqlFilters = [];
+  let sql = `
     SELECT 
-      products.*,      
+      products.*,  
       brands.name AS brand_name, 
       brands.logo AS brand_logo,
       discount_codes.amount AS discount_amount
@@ -18,13 +53,77 @@ const index = (req, res) => {
 
     LEFT JOIN discount_codes 
     ON discount_codes.id = products.discount_id
-
-    ORDER BY products.id ASC
-
   `;
 
-  connection.query(sql, (err, results) => {
+
+
+  if (product_name) {
+    sqlFilters.length === 0 ? 
+      sql += `
+        WHERE products.name = ?
+      `
+    :
+      sql += `
+        AND products.name = ?
+      `
+    sqlFilters.push(product_name);
+  }
+  if (brand_id) {
+    sqlFilters.length === 0 ?
+      sql += `
+        WHERE products.brand_id = ?
+      `
+    :
+      sql += `
+        AND products.brand_id = ?
+      `
+    sqlFilters.push(brand_id);
+  }
+  if (gender) {
+    sqlFilters.length === 0 ?
+      sql += `
+        WHERE products.gender_client = ?
+      `
+    :
+      sql += `
+        AND products.gender_client = ?
+      `
+    sqlFilters.push(gender);
+  }
+  if (max_price) {
+    sqlFilters.length === 0 ?
+      sql += `
+        WHERE products.price < ?
+      `
+    :
+      sql += `
+        AND products.price < ?
+      `
+    sqlFilters.push(max_price);
+  }
+  if (min_price) {
+    sqlFilters.length === 0 ?
+      sql += `
+        WHERE products.price > ?
+      `
+    :
+      sql += `
+        AND products.price > ?
+      `
+    sqlFilters.push(min_price);
+  }
+
+  sql += `
+    ORDER BY products.id ASC
+  `;
+
+
+
+  connection.query(sql, sqlFilters, (err, results) => {
+    // console.debug(results);
+
     if (err) return res.status(500).json({ error: err });
+    if (!results.length) return res.status(404).json({ message: `The resource you asked for has not been found` });
 
     res.json(results);
   });
@@ -77,13 +176,12 @@ const indexRecents = (req, res) => {
 
     ORDER BY products.created_at DESC
     LIMIT 10
-
   `;
 
-  connection.query(sql, (err, results) => {
+  connection.query(sql, (err, recentsResults) => {
     if (err) return res.status(500).json({ error: err });
 
-    res.json(results);
+    res.json(recentsResults);
   });
 };
 
@@ -111,14 +209,14 @@ const showParfume = (req, res) => {
   `;
 
   const ingredientSql = `
-  SELECT ingredients.*, 
-  ingredients_products.percentage AS percentage
-  FROM ingredients
+    SELECT ingredients.*, 
+    ingredients_products.percentage AS percentage
+    FROM ingredients
 
-  INNER JOIN ingredients_products 
-  ON ingredients_products.ingredient_id = ingredients.id
+    INNER JOIN ingredients_products 
+    ON ingredients_products.ingredient_id = ingredients.id
 
-  WHERE ingredients_products.product_id = ?
+    WHERE ingredients_products.product_id = ?
   `;
 
   connection.query(productSql, [id], (err, productResult) => {
@@ -139,6 +237,128 @@ const showParfume = (req, res) => {
   });
 };
 
+
+
+
+
+
+
+const cartAdd = (req, res) => {
+
+  const { cart_id, product_id } = req.body;
+  // console.log(appCarts);
+  // console.log("cart_id", cart_id);
+  // console.log("typeof(cart_id)", typeof(cart_id));
+  console.log("product_id", product_id);
+  console.log("typeof(product_id)", typeof(product_id));
+  
+  const client_cart = appCarts.find(cart => cart.id === cart_id)
+  console.log("client_cart", client_cart);
+
+
+  if (!client_cart) {
+    return res
+      .status(404)
+      .json({   
+          description: `Carello non trovato`,
+      });
+  }
+
+
+  const productSql = `
+    SELECT 
+      products.*,
+      brands.name AS brand_name, 
+      brands.logo AS brand_logo,
+      discount_codes.amount AS discount_amount
+
+    FROM products
+
+    INNER JOIN brands 
+    ON products.brand_id = brands.id
+
+    LEFT JOIN discount_codes 
+    ON discount_codes.id = products.discount_id
+
+	  WHERE products.id = ?
+
+    ORDER BY products.id ASC
+  `;
+
+  const ingredientSql = `
+    SELECT ingredients.*, 
+    ingredients_products.percentage AS percentage
+    FROM ingredients
+
+    INNER JOIN ingredients_products 
+    ON ingredients_products.ingredient_id = ingredients.id
+
+    WHERE ingredients_products.product_id = ?
+  `;
+
+
+  connection.query(productSql, [product_id], (err, productResult) => {
+    if (err) return res.status(500).json({ error: err });
+    if (productResult.length === 0)
+      return res.status(500).json({ error: "Product not found" });
+    const product = productResult[0];
+    connection.query(ingredientSql, [product_id], (err, ingredientResult) => {
+      if (err) return res.status(500).json({ error: err });
+      product.ingredients = ingredientResult.map((ingredient) => {
+        return {
+          name: ingredient.name,
+          percentage: ingredient.percentage,
+        };
+      });
+
+
+      client_cart.products.push(product);
+      res
+        .json({   
+          description: `cartAdd (${cart_id})`,
+          client_cart
+        });
+
+
+
+    });
+  });
+
+
+};
+const cartRemove = (req, res) => {
+
+  const { cart_id, product_id } = req.body;
+
+
+  const client_cart = appCarts.find(cart => cart.id === cart_id)
+  console.log("client_cart", client_cart);
+
+
+  if (!client_cart) {
+    return res
+      .status(404)
+      .json({   
+          description: `Carello non trovato`,
+      });
+  }
+
+
+
+
+  res
+    .json({   
+        description: `cartRemove (${cart_id} - product_id: ${product_id})`,
+        client_cart
+    });
+};
+
+
+
+
+
+
+
 // *
 const { APP_URL, APP_PORT } = process.env;
 const host = APP_PORT ? `${APP_URL}:${APP_PORT}` : APP_URL;
@@ -151,4 +371,6 @@ module.exports = {
   indexBestSellers,
   indexRecents,
   showParfume,
+  cartAdd,
+  cartRemove,
 };
