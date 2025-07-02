@@ -309,6 +309,7 @@ const cartAdd = (req, res) => {
     });
   });
 };
+
 const cartRemove = (req, res) => {
   const { cart_id, product_id } = req.body;
 
