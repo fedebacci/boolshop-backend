@@ -1,43 +1,36 @@
 const connection = require("../db/connection");
 
-
-
 const appCarts = [
   {
     id: "ABCDE",
-    products: []
+    products: [],
   },
   {
     id: "FGHIJ",
   },
   {
     id: "KLMNO",
-    products: []
+    products: [],
   },
   {
     id: "PQRST",
-    products: []
+    products: [],
   },
   {
     id: "UVWXY",
-    products: []
+    products: [],
   },
 ];
-
-
 
 // INDEX
 // LOGICA PER LA INDEX DI TUTTI I PRODOTTI, CON ANNESSE INFORMAZIONI SUL NOME DEL BRAND, LOGO DEL BRAND E SCONTO APPLICATO SUL SINGOLO PRODOTTO, SE ESISTENTE
 const index = (req, res) => {
-
-
   // # FILTRI FUNZIONANTI
   let { product_name, brand_id, gender, max_price, min_price } = req.query;
   // # FILTRI DA AGGIUNGERE:
   // #  * discount_id (filtro nullo o presente, colonna nulla o presente --> 3 casi: si filtro si col, si filtro no col, no filtro)
   // #  * size_ml (o name)
   // #  * discount_amount ? (Forse dovrei fare seconda richiesta a db? Le prop che mi servirebbero arrivano da prima risposta del db)
-
 
   const sqlFilters = [];
   let sql = `
@@ -55,61 +48,54 @@ const index = (req, res) => {
     ON discount_codes.id = products.discount_id
   `;
 
-
-
   if (product_name) {
-    sqlFilters.length === 0 ? 
-      sql += `
+    sqlFilters.length === 0
+      ? (sql += `
         WHERE products.name = ?
-      `
-    :
-      sql += `
+      `)
+      : (sql += `
         AND products.name = ?
-      `
+      `);
     sqlFilters.push(product_name);
   }
   if (brand_id) {
-    sqlFilters.length === 0 ?
-      sql += `
+    sqlFilters.length === 0
+      ? (sql += `
         WHERE products.brand_id = ?
-      `
-    :
-      sql += `
+      `)
+      : (sql += `
         AND products.brand_id = ?
-      `
+      `);
     sqlFilters.push(brand_id);
   }
   if (gender) {
-    sqlFilters.length === 0 ?
-      sql += `
+    sqlFilters.length === 0
+      ? (sql += `
         WHERE products.gender_client = ?
-      `
-    :
-      sql += `
+      `)
+      : (sql += `
         AND products.gender_client = ?
-      `
+      `);
     sqlFilters.push(gender);
   }
   if (max_price) {
-    sqlFilters.length === 0 ?
-      sql += `
+    sqlFilters.length === 0
+      ? (sql += `
         WHERE products.price < ?
-      `
-    :
-      sql += `
+      `)
+      : (sql += `
         AND products.price < ?
-      `
+      `);
     sqlFilters.push(max_price);
   }
   if (min_price) {
-    sqlFilters.length === 0 ?
-      sql += `
+    sqlFilters.length === 0
+      ? (sql += `
         WHERE products.price > ?
-      `
-    :
-      sql += `
+      `)
+      : (sql += `
         AND products.price > ?
-      `
+      `);
     sqlFilters.push(min_price);
   }
 
@@ -117,13 +103,14 @@ const index = (req, res) => {
     ORDER BY products.id ASC
   `;
 
-
-
   connection.query(sql, sqlFilters, (err, results) => {
     // console.debug(results);
 
     if (err) return res.status(500).json({ error: err });
-    if (!results.length) return res.status(404).json({ message: `The resource you asked for has not been found` });
+    if (!results.length)
+      return res
+        .status(404)
+        .json({ message: `The resource you asked for has not been found` });
 
     res.json(results);
   });
@@ -227,7 +214,9 @@ const showParfume = (req, res) => {
     connection.query(ingredientsSql, [id], (err, ingredientsResult) => {
       if (err) return res.status(500).json({ error: err });
       if (productResult.length === 0)
-      return res.status(404).json({ error: `Ingredients not found for product: ${id}.` });
+        return res
+          .status(404)
+          .json({ error: `Ingredients not found for product: ${id}.` });
       product.ingredients = ingredientsResult.map((i) => {
         return {
           name: i.name,
@@ -239,38 +228,29 @@ const showParfume = (req, res) => {
   });
 };
 
-
-
-
-
-
-
 const cartAdd = (req, res) => {
-
   const { cart_id, product_id } = req.body;
   // console.log(appCarts);
   // console.log("cart_id", cart_id);
   // console.log("typeof(cart_id)", typeof(cart_id));
   console.log("product_id", product_id);
-  console.log("typeof(product_id)", typeof(product_id));
-  
-  const client_cart = appCarts.find(cart => cart.id === cart_id);
+  console.log("typeof(product_id)", typeof product_id);
+
+  const client_cart = appCarts.find((cart) => cart.id === cart_id);
   console.log("client_cart", client_cart);
 
-
   if (!client_cart) {
-    return res
-      .status(404)
-      .json({   
-          description: `Carello non trovato`,
-      });
+    return res.status(404).json({
+      description: `Carello non trovato`,
+    });
   }
 
-
-
-  const isProductInCart = client_cart.products.find(product => product.id === product_id) === undefined ? false : true;
+  const isProductInCart =
+    client_cart.products.find((product) => product.id === product_id) ===
+    undefined
+      ? false
+      : true;
   console.log("isProductInCart", isProductInCart);
-
 
   const productSql = `
     SELECT 
@@ -303,7 +283,6 @@ const cartAdd = (req, res) => {
     WHERE ingredients_products.product_id = ?
   `;
 
-
   connection.query(productSql, [product_id], (err, productResult) => {
     if (err) return res.status(500).json({ error: err });
     if (productResult.length === 0)
@@ -312,7 +291,9 @@ const cartAdd = (req, res) => {
     connection.query(ingredientsSql, [product_id], (err, ingredientsResult) => {
       if (err) return res.status(500).json({ error: err });
       if (productResult.length === 0)
-      return res.status(404).json({ error: `Ingredients not found for product: ${product_id}.` });
+        return res
+          .status(404)
+          .json({ error: `Ingredients not found for product: ${product_id}.` });
       product.ingredients = ingredientsResult.map((ingredient) => {
         return {
           name: ingredient.name,
@@ -320,65 +301,46 @@ const cartAdd = (req, res) => {
         };
       });
 
-
       client_cart.products.push(product);
-      res
-        .json({   
-          description: `cartAdd (${cart_id} - product_id: ${product_id})`,
-          client_cart
-        });
-
-
-
+      res.json({
+        description: `cartAdd (${cart_id} - product_id: ${product_id})`,
+        client_cart,
+      });
     });
   });
-
-
 };
 const cartRemove = (req, res) => {
-
   const { cart_id, product_id } = req.body;
 
-
-  const client_cart = appCarts.find(cart => cart.id === cart_id);
-
+  const client_cart = appCarts.find((cart) => cart.id === cart_id);
 
   if (!client_cart) {
-    return res
-      .status(404)
-      .json({   
-          description: `Carello non trovato`,
-      });
+    return res.status(404).json({
+      description: `Carello non trovato`,
+    });
   }
-
-
 
   // const isProductInCart = client_cart.products.find(product => product.id === product_id) === undefined ? false : true;
-  const isProductInCart = client_cart.products.find(product => product.id === product_id);
+  const isProductInCart = client_cart.products.find(
+    (product) => product.id === product_id
+  );
 
   if (isProductInCart) {
-    client_cart.products.splice(client_cart.products.indexOf(isProductInCart), 1);
+    client_cart.products.splice(
+      client_cart.products.indexOf(isProductInCart),
+      1
+    );
   } else {
-    return res
-      .status(404)
-      .json({
-        description: `Prodotto ${product_id} non trovato nel carrello: ${cart_id}. Impossibile cancellare il prodotto`,
-      })
+    return res.status(404).json({
+      description: `Prodotto ${product_id} non trovato nel carrello: ${cart_id}. Impossibile cancellare il prodotto`,
+    });
   }
 
-
-  res
-    .json({   
-        description: `cartRemove (${cart_id} - product_id: ${product_id})`,
-        client_cart
-    });
+  res.json({
+    description: `cartRemove (${cart_id} - product_id: ${product_id})`,
+    client_cart,
+  });
 };
-
-
-
-
-
-
 
 // *
 const { APP_URL, APP_PORT } = process.env;
