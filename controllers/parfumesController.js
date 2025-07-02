@@ -1,28 +1,28 @@
 const connection = require("../db/connection");
 
 
-
-const appCarts = [
-  {
-    id: "ABCDE",
-    products: []
-  },
-  {
-    id: "FGHIJ",
-  },
-  {
-    id: "KLMNO",
-    products: []
-  },
-  {
-    id: "PQRST",
-    products: []
-  },
-  {
-    id: "UVWXY",
-    products: []
-  },
-];
+const appCarts = [];
+// const appCarts = [
+//   {
+//     id: "ABCDE",
+//     products: []
+//   },
+//   {
+//     id: "FGHIJ",
+//   },
+//   {
+//     id: "KLMNO",
+//     products: []
+//   },
+//   {
+//     id: "PQRST",
+//     products: []
+//   },
+//   {
+//     id: "UVWXY",
+//     products: []
+//   },
+// ];
 
 
 
@@ -60,13 +60,14 @@ const index = (req, res) => {
   if (product_name) {
     sqlFilters.length === 0 ? 
       sql += `
-        WHERE products.name = ?
+        WHERE products.name LIKE ?
       `
     :
       sql += `
-        AND products.name = ?
+        AND products.name LIKE ?
       `
-    sqlFilters.push(product_name);
+    sqlFilters.push(`%${product_name}%`);
+    console.log("sqlFilters", sqlFilters);
   }
   if (brand_id) {
     sqlFilters.length === 0 ?
@@ -245,14 +246,48 @@ const showParfume = (req, res) => {
 
 
 
-const cartAdd = (req, res) => {
 
-  const { cart_id, product_id } = req.body;
+
+
+
+const cartAdd = (req, res) => {
+  let { cart_id, product_id } = req.body;
   // console.log(appCarts);
   // console.log("cart_id", cart_id);
   // console.log("typeof(cart_id)", typeof(cart_id));
   console.log("product_id", product_id);
   console.log("typeof(product_id)", typeof(product_id));
+
+
+  if (!cart_id) {
+    const newCartId = generateNewIndex();
+    console.log("newCartId", newCartId);
+
+
+    // # ATTENZIONE
+    // todo:
+    // - Quanto commentato sotto andrebbe (senza priorita) implementato per poter cancellare la riga, sopra, in cui creo forzatamente un array di appCarts vuoto. In questo modo lo creerei dinamicamente
+    // if (!appCarts) {
+    // // if (appCarts === undefined) {
+    //   appCarts = [];
+    // }
+    // console.log("appCarts", appCarts);
+
+    const newCart = {
+      id: newCartId,
+      products: []
+    };
+    appCarts.push(newCart);
+
+    // return res
+    //   .json({   
+    //       description: `Devo creare il carrello`,
+    //       newCartId
+    //   });
+    cart_id = newCartId;
+  }
+
+
   
   const client_cart = appCarts.find(cart => cart.id === cart_id);
   console.log("client_cart", client_cart);
@@ -335,6 +370,19 @@ const cartAdd = (req, res) => {
 
 
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
 const cartRemove = (req, res) => {
 
   const { cart_id, product_id } = req.body;
@@ -373,6 +421,48 @@ const cartRemove = (req, res) => {
         client_cart
     });
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const generateNewIndex = () => {
+    const options = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let randomString = "";
+    while (randomString.length < 5) {
+      const randomIndex = Math.floor(Math.random() * options.length);
+      randomString += options[randomIndex];
+    }
+
+    const cartAlreadyExists = appCarts.find(cart => cart.id === newCartId);
+    console.log("cartAlreadyExists", cartAlreadyExists);
+
+    if (cartAlreadyExists) {
+      return generateNewIndex();
+    }
+
+    return randomString;
+  }
+
+
+
+
+
+
+
+
+
 
 
 
