@@ -1,38 +1,5 @@
 const connection = require("../db/connection");
-// const cart = require("../db/cart")
-cart = {
-  id: 1,
-  products: [
-    {
-      id: 1,
-      name: "Sauvage",
-      image_url: "",
-      // ?
-      gender_client: "male",
-      price: "90.00",
-      size_ml: 75,
-      // ?
-      size_name: "xs",
-      brand_name: "Dior",
-      discount_amount: 10,
-      quantity: 2,
-    },
-    {
-      id: 2,
-      name: "Miss Dior",
-      image_url: "",
-      // ?
-      gender_client: "female",
-      price: "100.00",
-      size_ml: 75,
-      // ?
-      size_name: "xs",
-      brand_name: "Dior",
-      discount_amount: 20,
-      quantity: 1,
-    },
-  ],
-};
+
 // INDEX
 
 // LOGICA PER LA INDEX DI TUTTI I PRODOTTI, CON ANNESSE INFORMAZIONI SUL NOME DEL BRAND, LOGO DEL BRAND E SCONTO APPLICATO SUL SINGOLO PRODOTTO, SE ESISTENTE
@@ -174,52 +141,6 @@ const showParfume = (req, res) => {
 
 //  API DA METTERE NELLA PAGINA DEL FORM
 
-const storeCheckout = (req, res) => {
-  // REQUIRE DEL CART
-  const {
-    email,
-    first_name,
-    last_name,
-    country,
-    city,
-    postal_code,
-    street,
-    civic_number,
-  } = req.body;
-
-  const clientInfosValues = [
-    email,
-    first_name,
-    last_name,
-    country,
-    city,
-    postal_code,
-    street,
-    civic_number,
-  ];
-
-  // PRENDI E CONTROLLA CODICE SCONTO
-
-  const checkoutCart = {
-    cartId: cart.id,
-    cartProducts: cart.products.map((product) => {
-      return {
-        productId: product.id,
-        productFinalPrice:
-          product.price - (product.price * product.discount_amount) / 100,
-        productSize: product.size_ml,
-        productBrand: product.brand_name,
-        quantity: product.quantity,
-      };
-    }),
-  };
-  console.log(checkoutCart);
-  const total_price = checkoutCart.cartProducts.reduce((acc, p) => {
-    return acc + p.productFinalPrice * p.quantity;
-  }, 0);
-  console.log(total_price);
-};
-
 // *
 const { APP_URL, APP_PORT } = process.env;
 const host = APP_PORT ? `${APP_URL}:${APP_PORT}` : APP_URL;
@@ -232,5 +153,4 @@ module.exports = {
   indexBestSellers,
   indexRecents,
   showParfume,
-  storeCheckout,
 };

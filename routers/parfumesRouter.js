@@ -11,7 +11,4 @@ parfumesRouter.get("/recents", parfumesController.indexRecents);
 // SHOW
 parfumesRouter.get("/:id", parfumesController.showParfume);
 
-// TEST CHECKOUT
-parfumesRouter.post("/checkout", parfumesController.storeCheckout);
-
 module.exports = parfumesRouter;
