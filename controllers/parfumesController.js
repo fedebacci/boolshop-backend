@@ -231,10 +231,17 @@ const cartShow = (req, res) => {
 
 const cartAdd = (req, res) => {
   let { cart_id, product_id } = req.body;
+  // console.log(appCarts);
+  // console.log("cart_id", cart_id);
+  // console.log("typeof(cart_id)", typeof(cart_id));
+  console.log("product_id", product_id);
+  console.log("typeof(product_id)", typeof(product_id));
+
 
   if (!cart_id) {
     const newCartId = generateNewIndex();
     console.log("newCartId", newCartId);
+
 
     // # ATTENZIONE
     // todo:
@@ -247,84 +254,107 @@ const cartAdd = (req, res) => {
 
     const newCart = {
       id: newCartId,
-      products: [],
+      products: []
     };
     appCarts.push(newCart);
+
+    // return res
+    //   .json({   
+    //       description: `Devo creare il carrello`,
+    //       newCartId
+    //   });
     cart_id = newCartId;
   }
 
-  const client_cart = appCarts.find((cart) => cart.id === cart_id);
+
+  
+  const client_cart = appCarts.find(cart => cart.id === cart_id);
   console.log("client_cart", client_cart);
 
+
   if (!client_cart) {
-    return res.status(404).json({
-      description: `Carello non trovato`,
-    });
+    return res
+      .status(404)
+      .json({   
+          description: `Carello non trovato`,
+      });
   }
 
-  const isProductInCart =
-    client_cart.products.find((product) => product.id === product_id) ===
-    undefined
-      ? false
-      : true;
+
+
+  const isProductInCart = client_cart.products.find(product => product.id === product_id) === undefined ? false : true;
   console.log("isProductInCart", isProductInCart);
 
-  const productSql = `
-    SELECT 
-      products.*,
-      brands.name AS brand_name, 
-      brands.logo AS brand_logo,
-      discount_codes.amount AS discount_amount
 
-    FROM products
+  if (isProductInCart) {
+    const product = client_cart.products.find(product => product.id === product_id);
+    console.log("product", product);
+    product.quantity += 1;
+    res
+      .json({   
+        description: `cartAdd (${cart_id} - product_id: ${product_id})`,
+        client_cart
+      });
+  } else {
+    const productSql = `
+      SELECT 
+        products.*,
+        brands.name AS brand_name, 
+        brands.logo AS brand_logo,
+        discount_codes.amount AS discount_amount
 
-    INNER JOIN brands 
-    ON products.brand_id = brands.id
+      FROM products
 
-    LEFT JOIN discount_codes 
-    ON discount_codes.id = products.discount_id
+      INNER JOIN brands 
+      ON products.brand_id = brands.id
 
-	  WHERE products.id = ?
+      LEFT JOIN discount_codes 
+      ON discount_codes.id = products.discount_id
 
-    ORDER BY products.id ASC
-  `;
+      WHERE products.id = ?
 
-  const ingredientsSql = `
-    SELECT ingredients.*, 
-    ingredients_products.percentage AS percentage
-    FROM ingredients
+      ORDER BY products.id ASC
+    `;
 
-    INNER JOIN ingredients_products 
-    ON ingredients_products.ingredient_id = ingredients.id
+    const ingredientsSql = `
+      SELECT ingredients.*, 
+      ingredients_products.percentage AS percentage
+      FROM ingredients
 
-    WHERE ingredients_products.product_id = ?
-  `;
+      INNER JOIN ingredients_products 
+      ON ingredients_products.ingredient_id = ingredients.id
 
-  connection.query(productSql, [product_id], (err, productResult) => {
-    if (err) return res.status(500).json({ error: err });
-    if (productResult.length === 0)
-      return res.status(404).json({ error: `Product ${product_id} not found` });
-    const product = productResult[0];
-    connection.query(ingredientsSql, [product_id], (err, ingredientsResult) => {
+      WHERE ingredients_products.product_id = ?
+    `;
+
+
+    connection.query(productSql, [product_id], (err, productResult) => {
       if (err) return res.status(500).json({ error: err });
       if (productResult.length === 0)
-        return res
-          .status(404)
-          .json({ error: `Ingredients not found for product: ${product_id}.` });
-      product.ingredients = ingredientsResult.map((ingredient) => {
-        return {
-          name: ingredient.name,
-          percentage: ingredient.percentage,
-        };
-      });
+        return res.status(404).json({ error: `Product ${product_id} not found` });
+      const product = productResult[0];
+      connection.query(ingredientsSql, [product_id], (err, ingredientsResult) => {
+        if (err) return res.status(500).json({ error: err });
+        if (productResult.length === 0)
+        return res.status(404).json({ error: `Ingredients not found for product: ${product_id}.` });
+        product.ingredients = ingredientsResult.map((ingredient) => {
+          return {
+            name: ingredient.name,
+            percentage: ingredient.percentage,
+          };
+        });
 
-      client_cart.products.push(product);
-      res.json({
-        description: `cartAdd (${cart_id} - product_id: ${product_id})`,
-        client_cart,
+        product.quantity = 1; // Aggiungo la proprietà quantity al prodotto
+        client_cart.products.push(product);
+        res
+          .json({   
+            description: `cartAdd (${cart_id} - product_id: ${product_id})`,
+            client_cart
+          });
+
       });
     });
-  });
+  }
 };
 
 const cartRemove = (req, res) => {
