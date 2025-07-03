@@ -1,42 +1,46 @@
 // const cart = require("../db/cart")
+const express = require("express");
 const connection = require("../db/connection");
+const { appCarts } = require("./parfumesController");
+// cart = {
+//   id: 1,
+//   products: [
+//     {
+//       id: 1,
+//       name: "Sauvage",
+//       image_url: "",
+//       // ?
+//       gender_client: "male",
+//       price: "90.00",
+//       size_ml: 75,
+//       // ?
+//       size_name: "xs",
+//       brand_name: "Dior",
+//       discount_amount: 10,
+//       quantity: 2,
+//     },
+//     {
+//       id: 2,
+//       name: "Miss Dior",
+//       image_url: "",
+//       // ?
+//       gender_client: "female",
+//       price: "100.00",
+//       size_ml: 75,
+//       // ?
+//       size_name: "xs",
+//       brand_name: "Dior",
+//       discount_amount: 20,
+//       quantity: 1,
+//     },
+//   ],
+// };
 
-cart = {
-  id: 1,
-  products: [
-    {
-      id: 1,
-      name: "Sauvage",
-      image_url: "",
-      // ?
-      gender_client: "male",
-      price: "90.00",
-      size_ml: 75,
-      // ?
-      size_name: "xs",
-      brand_name: "Dior",
-      discount_amount: 10,
-      quantity: 2,
-    },
-    {
-      id: 2,
-      name: "Miss Dior",
-      image_url: "",
-      // ?
-      gender_client: "female",
-      price: "100.00",
-      size_ml: 75,
-      // ?
-      size_name: "xs",
-      brand_name: "Dior",
-      discount_amount: 20,
-      quantity: 1,
-    },
-  ],
-};
+const carts = appCarts;
 
 const storeCheckout = (req, res) => {
-  // REQUIRE DEL CART (PER ORA HARD-CODATO)
+  console.log(carts);
+
   const {
     email,
     first_name,
@@ -60,6 +64,8 @@ const storeCheckout = (req, res) => {
     civic_number,
   ];
 
+  const cart = carts.find((c) => c.id === req.body.cart_id);
+
   // 1. PRENDI E CONTROLLA CODICE SCONTO DAL DATABASE
   const discountSql =
     "SELECT discount_codes.* FROM discount_codes WHERE code = ?";
@@ -79,13 +85,15 @@ const storeCheckout = (req, res) => {
         return {
           productId: product.id,
           productFinalPrice:
-            product.price - (product.price * product.discount_amount) / 100,
+            parseInt(product.price) -
+            (parseInt(product.price) * parseInt(product.discount_amount)) / 100,
           productSize: product.size_ml,
           productBrand: product.brand_name,
           quantity: product.quantity,
         };
       }),
     };
+    console.log(checkoutCart);
 
     const total_price = checkoutCart.cartProducts.reduce((acc, p) => {
       return acc + p.productFinalPrice * p.quantity;

@@ -1,9 +1,6 @@
 const connection = require("../db/connection");
 
-
 const appCarts = [];
-
-
 
 // INDEX
 // LOGICA PER LA INDEX DI TUTTI I PRODOTTI, CON ANNESSE INFORMAZIONI SUL NOME DEL BRAND, LOGO DEL BRAND E SCONTO APPLICATO SUL SINGOLO PRODOTTO, SE ESISTENTE
@@ -32,14 +29,13 @@ const index = (req, res) => {
   `;
 
   if (product_name) {
-    sqlFilters.length === 0 ? 
-      sql += `
+    sqlFilters.length === 0
+      ? (sql += `
         WHERE products.name LIKE ?
-      `
-    :
-      sql += `
+      `)
+      : (sql += `
         AND products.name LIKE ?
-      `
+      `);
     sqlFilters.push(`%${product_name}%`);
   }
   if (brand_id) {
@@ -212,57 +208,33 @@ const showParfume = (req, res) => {
   });
 };
 
-
-
-
-
-
-
 const cartShow = (req, res) => {
   let { cart_id } = req.body;
 
-
-
-  let client_cart = appCarts.find(cart => cart.id === cart_id);
+  let client_cart = appCarts.find((cart) => cart.id === cart_id);
   console.log("client_cart", client_cart);
-
 
   // * DEBUG
   // client_cart = appCarts[0];
 
-
   if (!client_cart) {
-    return res
-      .status(404)
-      .json({   
-          description: `Carello non trovato`,
-      });
+    return res.status(404).json({
+      description: `Carello non trovato`,
+    });
   }
 
-
-  res
-    .json({   
-      description: `cartShow (${cart_id})`,
-      client_cart
-    });
+  res.json({
+    description: `cartShow (${cart_id})`,
+    client_cart,
+  });
 };
-
-
-
-
-
-
-
-
 
 const cartAdd = (req, res) => {
   let { cart_id, product_id } = req.body;
 
-
   if (!cart_id) {
     const newCartId = generateNewIndex();
     console.log("newCartId", newCartId);
-
 
     // # ATTENZIONE
     // todo:
@@ -275,15 +247,13 @@ const cartAdd = (req, res) => {
 
     const newCart = {
       id: newCartId,
-      products: []
+      products: [],
     };
     appCarts.push(newCart);
     cart_id = newCartId;
   }
 
-
-  
-  const client_cart = appCarts.find(cart => cart.id === cart_id);
+  const client_cart = appCarts.find((cart) => cart.id === cart_id);
   console.log("client_cart", client_cart);
 
   if (!client_cart) {
@@ -390,6 +360,24 @@ const cartRemove = (req, res) => {
   });
 };
 
+const generateNewIndex = () => {
+  const options = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let randomString = "";
+  while (randomString.length < 5) {
+    const randomIndex = Math.floor(Math.random() * options.length);
+    randomString += options[randomIndex];
+  }
+
+  const cartAlreadyExists = appCarts.find((cart) => cart.id === newCartId);
+  console.log("cartAlreadyExists", cartAlreadyExists);
+
+  if (cartAlreadyExists) {
+    return generateNewIndex();
+  }
+
+  return randomString;
+};
+
 // *
 const { APP_URL, APP_PORT } = process.env;
 const host = APP_PORT ? `${APP_URL}:${APP_PORT}` : APP_URL;
@@ -405,4 +393,5 @@ module.exports = {
   cartShow,
   cartAdd,
   cartRemove,
+  appCarts,
 };
