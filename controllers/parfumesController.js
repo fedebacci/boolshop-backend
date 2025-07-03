@@ -91,8 +91,9 @@ const index = (req, res) => {
       return res
         .status(404)
         .json({ message: `The resource you asked for has not been found` });
+    // console.log(typeof results);
 
-    res.json(results);
+    res.json(formatIndexResults(results));
   });
 };
 
@@ -120,7 +121,7 @@ const indexBestSellers = (req, res) => {
   connection.query(sql, (err, bestSellerResults) => {
     if (err) return res.status(500).json({ error: err });
 
-    res.json(bestSellerResults);
+    res.json(formatIndexResults(bestSellerResults));
   });
 };
 
@@ -148,7 +149,7 @@ const indexRecents = (req, res) => {
   connection.query(sql, (err, recentsResults) => {
     if (err) return res.status(500).json({ error: err });
 
-    res.json(recentsResults);
+    res.json(formatIndexResults(recentsResults));
   });
 };
 
@@ -190,7 +191,7 @@ const showParfume = (req, res) => {
     if (err) return res.status(500).json({ error: err });
     if (productResult.length === 0)
       return res.status(500).json({ error: "Product not found" });
-    const product = productResult[0];
+    const product = formatIndexResults(productResult);
     connection.query(ingredientsSql, [id], (err, ingredientsResult) => {
       if (err) return res.status(500).json({ error: err });
       if (productResult.length === 0)
@@ -235,13 +236,11 @@ const cartAdd = (req, res) => {
   // console.log("cart_id", cart_id);
   // console.log("typeof(cart_id)", typeof(cart_id));
   console.log("product_id", product_id);
-  console.log("typeof(product_id)", typeof(product_id));
-
+  console.log("typeof(product_id)", typeof product_id);
 
   if (!cart_id) {
     const newCartId = generateNewIndex();
     console.log("newCartId", newCartId);
-
 
     // # ATTENZIONE
     // todo:
@@ -254,47 +253,44 @@ const cartAdd = (req, res) => {
 
     const newCart = {
       id: newCartId,
-      products: []
+      products: [],
     };
     appCarts.push(newCart);
 
     // return res
-    //   .json({   
+    //   .json({
     //       description: `Devo creare il carrello`,
     //       newCartId
     //   });
     cart_id = newCartId;
   }
 
-
-  
-  const client_cart = appCarts.find(cart => cart.id === cart_id);
+  const client_cart = appCarts.find((cart) => cart.id === cart_id);
   console.log("client_cart", client_cart);
 
-
   if (!client_cart) {
-    return res
-      .status(404)
-      .json({   
-          description: `Carello non trovato`,
-      });
+    return res.status(404).json({
+      description: `Carello non trovato`,
+    });
   }
 
-
-
-  const isProductInCart = client_cart.products.find(product => product.id === product_id) === undefined ? false : true;
+  const isProductInCart =
+    client_cart.products.find((product) => product.id === product_id) ===
+    undefined
+      ? false
+      : true;
   console.log("isProductInCart", isProductInCart);
 
-
   if (isProductInCart) {
-    const product = client_cart.products.find(product => product.id === product_id);
+    const product = client_cart.products.find(
+      (product) => product.id === product_id
+    );
     console.log("product", product);
     product.quantity += 1;
-    res
-      .json({   
-        description: `cartAdd (${cart_id} - product_id: ${product_id})`,
-        client_cart
-      });
+    res.json({
+      description: `cartAdd (${cart_id} - product_id: ${product_id})`,
+      client_cart,
+    });
   } else {
     const productSql = `
       SELECT 
@@ -327,32 +323,37 @@ const cartAdd = (req, res) => {
       WHERE ingredients_products.product_id = ?
     `;
 
-
     connection.query(productSql, [product_id], (err, productResult) => {
       if (err) return res.status(500).json({ error: err });
       if (productResult.length === 0)
-        return res.status(404).json({ error: `Product ${product_id} not found` });
+        return res
+          .status(404)
+          .json({ error: `Product ${product_id} not found` });
       const product = productResult[0];
-      connection.query(ingredientsSql, [product_id], (err, ingredientsResult) => {
-        if (err) return res.status(500).json({ error: err });
-        if (productResult.length === 0)
-        return res.status(404).json({ error: `Ingredients not found for product: ${product_id}.` });
-        product.ingredients = ingredientsResult.map((ingredient) => {
-          return {
-            name: ingredient.name,
-            percentage: ingredient.percentage,
-          };
-        });
-
-        product.quantity = 1; // Aggiungo la proprietà quantity al prodotto
-        client_cart.products.push(product);
-        res
-          .json({   
-            description: `cartAdd (${cart_id} - product_id: ${product_id})`,
-            client_cart
+      connection.query(
+        ingredientsSql,
+        [product_id],
+        (err, ingredientsResult) => {
+          if (err) return res.status(500).json({ error: err });
+          if (productResult.length === 0)
+            return res.status(404).json({
+              error: `Ingredients not found for product: ${product_id}.`,
+            });
+          product.ingredients = ingredientsResult.map((ingredient) => {
+            return {
+              name: ingredient.name,
+              percentage: ingredient.percentage,
+            };
           });
 
-      });
+          product.quantity = 1; // Aggiungo la proprietà quantity al prodotto
+          client_cart.products.push(product);
+          res.json({
+            description: `cartAdd (${cart_id} - product_id: ${product_id})`,
+            client_cart,
+          });
+        }
+      );
     });
   }
 };
@@ -414,6 +415,31 @@ const host = APP_PORT ? `${APP_URL}:${APP_PORT}` : APP_URL;
 // const formatImage = (image) => {
 //     return image ? `${host}/images/parfumes/${image}` : `${host}/images/parfumes/placeholder.jpg`;
 // };
+
+function formatIndexResults(r) {
+  const formattedResults = r.map((product) => ({
+    id: product.id,
+    name: product.name,
+    image: product.image_url,
+    gender: product.gender_client,
+    description: product.description,
+    best_seller: product.best_seller,
+    entry_date: product.created_at,
+    price: product.price,
+    size_ml: product.size_ml,
+    size_name: product.size_name,
+    brand: {
+      brand_id: product.brand_id,
+      brand_name: product.brand_name,
+      brand_logo: product.brand_logo,
+    },
+    discount: {
+      discount_id: product.discount_id,
+      discount_amount: product.discount_amount ? product.discount_amount : 0,
+    },
+  }));
+  return formattedResults;
+}
 
 module.exports = {
   index,

@@ -85,8 +85,7 @@ const storeCheckout = (req, res) => {
         return {
           productId: product.id,
           productFinalPrice:
-            parseInt(product.price) -
-            (parseInt(product.price) * parseInt(product.discount_amount)) / 100,
+            product.price - (product.price * product.discount_amount) / 100,
           productSize: product.size_ml,
           productBrand: product.brand_name,
           quantity: product.quantity,
