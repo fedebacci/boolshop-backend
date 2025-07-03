@@ -94,11 +94,17 @@ const storeCheckout = (req, res) => {
     };
     console.log(checkoutCart);
 
-    const total_price = checkoutCart.cartProducts.reduce((acc, p) => {
-      return acc + p.productFinalPrice * p.quantity;
-    }, 0);
+    const total_price = parseFloat(
+      checkoutCart.cartProducts
+        .reduce((acc, p) => {
+          return acc + p.productFinalPrice * p.quantity;
+        }, 0)
+        .toFixed(2)
+    );
 
-    const final_price = total_price - (total_price * discountAmount) / 100;
+    const final_price = parseFloat(
+      (total_price - (total_price * discountAmount) / 100).toFixed(2)
+    );
 
     //  CALCOLO SPEDIZIONE
     const setShipmentPrice = (country, total_price) => {
