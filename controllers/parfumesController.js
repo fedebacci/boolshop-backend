@@ -2,27 +2,6 @@ const connection = require("../db/connection");
 
 
 const appCarts = [];
-// const appCarts = [
-//   {
-//     id: "ABCDE",
-//     products: []
-//   },
-//   {
-//     id: "FGHIJ",
-//   },
-//   {
-//     id: "KLMNO",
-//     products: []
-//   },
-//   {
-//     id: "PQRST",
-//     products: []
-//   },
-//   {
-//     id: "UVWXY",
-//     products: []
-//   },
-// ];
 
 
 
@@ -67,7 +46,6 @@ const index = (req, res) => {
         AND products.name LIKE ?
       `
     sqlFilters.push(`%${product_name}%`);
-    console.log("sqlFilters", sqlFilters);
   }
   if (brand_id) {
     sqlFilters.length === 0 ?
@@ -246,17 +224,45 @@ const showParfume = (req, res) => {
 
 
 
+const cartShow = (req, res) => {
+  let { cart_id } = req.body;
+
+
+
+  let client_cart = appCarts.find(cart => cart.id === cart_id);
+  console.log("client_cart", client_cart);
+
+
+  // * DEBUG
+  // client_cart = appCarts[0];
+
+
+  if (!client_cart) {
+    return res
+      .status(404)
+      .json({   
+          description: `Carello non trovato`,
+      });
+  }
+
+
+  res
+    .json({   
+      description: `cartShow (${cart_id})`,
+      client_cart
+    });
+};
+
+
+
+
+
 
 
 
 
 const cartAdd = (req, res) => {
   let { cart_id, product_id } = req.body;
-  // console.log(appCarts);
-  // console.log("cart_id", cart_id);
-  // console.log("typeof(cart_id)", typeof(cart_id));
-  console.log("product_id", product_id);
-  console.log("typeof(product_id)", typeof(product_id));
 
 
   if (!cart_id) {
@@ -278,12 +284,6 @@ const cartAdd = (req, res) => {
       products: []
     };
     appCarts.push(newCart);
-
-    // return res
-    //   .json({   
-    //       description: `Devo creare il carrello`,
-    //       newCartId
-    //   });
     cart_id = newCartId;
   }
 
@@ -482,6 +482,7 @@ module.exports = {
   indexBestSellers,
   indexRecents,
   showParfume,
+  cartShow,
   cartAdd,
   cartRemove,
 };

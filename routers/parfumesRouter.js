@@ -9,6 +9,7 @@ parfumesRouter.get("/bestsellers", parfumesController.indexBestSellers);
 parfumesRouter.get("/recents", parfumesController.indexRecents);
 
 
+parfumesRouter.get("/cartShow", parfumesController.cartShow);
 parfumesRouter.post("/cartAdd", parfumesController.cartAdd);
 parfumesRouter.delete("/cartRemove", parfumesController.cartRemove);
 
