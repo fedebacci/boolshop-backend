@@ -188,7 +188,14 @@ const indexRecents = (req, res) => {
 //  AVREMO ALTRI PARAMETRI A CUI APPOGGIARCI PER FARLO, NON SARÁ(CREDO) NECESSARIA TUTTA QUESTA LOGICA (CHE SICURAMENTE É OTTIMIZZABILE)
 
 const showParfume = (req, res) => {
-  const slug = req.params.slug;
+  // const slug = req.params.slug;
+  // const slug = req.params.id;
+  
+  console.debug("req.params", req.params);
+  // console.debug(slug);
+  const slug = req.params.id;
+
+
   const productSql = `
     SELECT 
       products.*,      
@@ -223,7 +230,7 @@ const showParfume = (req, res) => {
     if (productResult.length === 0)
       return res.status(500).json({ error: "Product not found" });
     const product = formatIndexResults(productResult);
-    connection.query(ingredientsSql, [id], (err, ingredientsResult) => {
+    connection.query(ingredientsSql, [product.id], (err, ingredientsResult) => {
       if (err) return res.status(500).json({ error: err });
       if (productResult.length === 0)
         return res
