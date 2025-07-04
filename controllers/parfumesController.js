@@ -18,14 +18,14 @@ const index = (req, res) => {
       products.*,  
       brands.name AS brand_name, 
       brands.logo AS brand_logo,
-      discount_codes.amount AS discount_amount
+      discounts.amount AS discount_amount
     FROM products
 
     INNER JOIN brands 
     ON products.brand_id = brands.id
 
-    LEFT JOIN discount_codes 
-    ON discount_codes.id = products.discount_id
+    LEFT JOIN discounts 
+    ON discounts.id = products.discount_id
   `;
 
   if (product_name) {
@@ -105,14 +105,14 @@ const indexBestSellers = (req, res) => {
       products.*,      
       brands.name AS brand_name, 
       brands.logo AS brand_logo,
-      discount_codes.amount AS discount_amount
+      discounts.amount AS discount_amount
     FROM products
 
     INNER JOIN brands 
     ON products.brand_id = brands.id
 
-    LEFT JOIN discount_codes 
-    ON discount_codes.id = products.discount_id
+    LEFT JOIN discounts 
+    ON discounts.id = products.discount_id
 
     WHERE products.best_seller = 1
     ORDER BY products.id ASC
@@ -133,14 +133,14 @@ const indexRecents = (req, res) => {
       products.*,      
       brands.name AS brand_name, 
       brands.logo AS brand_logo,
-      discount_codes.amount AS discount_amount
+      discounts.amount AS discount_amount
     FROM products
 
     INNER JOIN brands 
     ON products.brand_id = brands.id
 
-    LEFT JOIN discount_codes 
-    ON discount_codes.id = products.discount_id
+    LEFT JOIN discounts 
+    ON discounts.id = products.discount_id
 
     ORDER BY products.created_at DESC
     LIMIT 10
@@ -163,15 +163,15 @@ const showParfume = (req, res) => {
       products.*,      
       brands.name AS brand_name, 
       brands.logo AS brand_logo,
-      discount_codes.amount AS discount_amount
+      discounts.amount AS discount_amount
 
     FROM products
 
     INNER JOIN brands 
     ON products.brand_id = brands.id
 
-    LEFT JOIN discount_codes 
-    ON discount_codes.id = products.discount_id
+    LEFT JOIN discounts 
+    ON discounts.id = products.discount_id
     
     WHERE products.id = ?
   `;
@@ -297,15 +297,15 @@ const cartAdd = (req, res) => {
         products.*,
         brands.name AS brand_name, 
         brands.logo AS brand_logo,
-        discount_codes.amount AS discount_amount
+        discounts.amount AS discount_amount
 
       FROM products
 
       INNER JOIN brands 
       ON products.brand_id = brands.id
 
-      LEFT JOIN discount_codes 
-      ON discount_codes.id = products.discount_id
+      LEFT JOIN discounts 
+      ON discounts.id = products.discount_id
 
       WHERE products.id = ?
 
