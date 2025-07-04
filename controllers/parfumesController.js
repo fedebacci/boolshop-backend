@@ -90,7 +90,7 @@ const index = (req, res) => {
     if (!results.length)
       return res
         .status(404)
-        .json({ pageErrorMessage: `I criteri per la ricercsa non hanno fornito nessun risultato.` });
+        .json({ pageErrorMessage: `I criteri per la ricerca non hanno fornito nessun risultato.` });
 
     res.json(formatIndexResults(results));
   });
