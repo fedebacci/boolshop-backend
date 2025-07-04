@@ -1,7 +1,7 @@
 // const cart = require("../db/cart")
 const express = require("express");
 const connection = require("../db/connection");
-const { appCarts } = require("./parfumesController");
+// const { appCarts } = require("./parfumesController");
 // cart = {
 //   id: 1,
 //   products: [
@@ -36,10 +36,10 @@ const { appCarts } = require("./parfumesController");
 //   ],
 // };
 
-const carts = appCarts;
+// const carts = appCarts;
 
 const storeCheckout = (req, res) => {
-  console.log(carts);
+  // console.log(carts);
 
   const {
     email,
@@ -64,7 +64,9 @@ const storeCheckout = (req, res) => {
     civic_number,
   ];
 
-  const cart = carts.find((c) => c.id === req.body.cart_id);
+  // CAMBIA IN BASE A PAGINA DEL CART, PROBABILMENTE SARÁ const cart = req.body.cart;
+  // const cart = carts.find((c) => c.id === req.body.cart_id);
+  const cart = req.body.cart;
 
   // 1. PRENDI E CONTROLLA CODICE SCONTO DAL DATABASE
   const discountSql =
@@ -79,15 +81,19 @@ const storeCheckout = (req, res) => {
       discountResult.length > 0 ? discountResult[0].id : null;
 
     // CALCOLO E PREPARAZIONE DEI DATI PER L'ORDINE
+
+    // ROBA CARRELLO
+
     const checkoutCart = {
-      cartId: cart.id,
-      cartProducts: cart.products.map((product) => {
+      cartProducts: cart.map((product) => {
         return {
           productId: product.id,
-          productFinalPrice:
-            product.price - (product.price * product.discount_amount) / 100,
+          productFinalPrice: parseFloat(
+            product.price -
+              (product.price * product.discount.discount_amount) / 100
+          ).toFixed(2),
           productSize: product.size_ml,
-          productBrand: product.brand_name,
+          productBrand: product.brand.brand_name,
           quantity: product.quantity,
         };
       }),
@@ -152,7 +158,7 @@ const storeCheckout = (req, res) => {
             INSERT INTO products_orders (orders_id, products_id, quantity)
             VALUES ?
           `;
-          const orderProductsValues = cart.products.map((p) => [
+          const orderProductsValues = cart.map((p) => [
             orderId,
             p.id,
             p.quantity,
@@ -169,6 +175,7 @@ const storeCheckout = (req, res) => {
               discountAmount,
               final_price,
               shipment_price,
+              checkoutCart,
             });
           });
         }
