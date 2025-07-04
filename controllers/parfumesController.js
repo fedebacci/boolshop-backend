@@ -90,8 +90,7 @@ const index = (req, res) => {
     if (!results.length)
       return res
         .status(404)
-        .json({ message: `The resource you asked for has not been found` });
-    // console.log(typeof results);
+        .json({ pageErrorMessage: `I criteri per la ricercsa non hanno fornito nessun risultato.` });
 
     res.json(formatIndexResults(results));
   });
