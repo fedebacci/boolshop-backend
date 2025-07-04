@@ -5,12 +5,16 @@ const appCarts = [];
 // INDEX
 // LOGICA PER LA INDEX DI TUTTI I PRODOTTI, CON ANNESSE INFORMAZIONI SUL NOME DEL BRAND, LOGO DEL BRAND E SCONTO APPLICATO SUL SINGOLO PRODOTTO, SE ESISTENTE
 const index = (req, res) => {
+
   // # FILTRI FUNZIONANTI
-  let { product_name, brand_id, gender, max_price, min_price, order_by, size } = req.query;
-  // # FILTRI DA AGGIUNGERE:
-  // #  * discount_id (filtro nullo o presente, colonna nulla o presente --> 3 casi: si filtro si col, si filtro no col, no filtro)
-  // #  * size_ml (o name)
-  // #  * discount_amount ? (Forse dovrei fare seconda richiesta a db? Le prop che mi servirebbero arrivano da prima risposta del db)
+  let { product_name, brand_slug, gender, max_price, min_price, order_by, size } = req.query;
+
+  // ? FILTRI DA AGGIUNGERE:
+  // ?  * discount_id (filtro nullo o presente, colonna nulla o presente --> 3 casi: si filtro si col, si filtro no col, no filtro)
+  // ?  * discount_amount ? (Forse dovrei fare seconda richiesta a db? Le prop che mi servirebbero arrivano da prima risposta del db)
+
+
+
 
   const sqlFilters = [];
   let sql = `
@@ -38,16 +42,16 @@ const index = (req, res) => {
       `);
     sqlFilters.push(`%${product_name}%`);
   }
-  if (brand_id) {
-    sqlFilters.length === 0
-      ? (sql += `
-        WHERE products.brand_id = ?
-      `)
-      : (sql += `
-        AND products.brand_id = ?
-      `);
-    sqlFilters.push(brand_id);
-  }
+  // if (brand_id) {
+  //   sqlFilters.length === 0
+  //     ? (sql += `
+  //       WHERE products.brand_id = ?
+  //     `)
+  //     : (sql += `
+  //       AND products.brand_id = ?
+  //     `);
+  //   sqlFilters.push(brand_id);
+  // }
   if (gender) {
     sqlFilters.length === 0
       ? (sql += `
@@ -88,19 +92,31 @@ const index = (req, res) => {
       `);
     sqlFilters.push(size);
   }
-
+  if (size) {
+    sqlFilters.length === 0
+      ? (sql += `
+        WHERE products.size_name = ?
+      `)
+      : (sql += `
+        AND products.size_name = ?
+      `);
+    sqlFilters.push(size);
+  }
+  
   if (!order_by) {
     sql += `
-      ORDER BY products.id ASC
+    ORDER BY products.id ASC
     `;
   } else {
     sql += `ORDER BY ` + order_by;
   }
-
-  console.debug("sql", sql);
-  console.debug("sqlFilters", sqlFilters);
+  
+  
+  
+  if (brand_slug) {
+    console.debug("brand_slug", brand_slug);
+  }
   connection.query(sql, sqlFilters, (err, results) => {
-    console.debug(results);
 
     if (err) return res.status(500).json({ error: err });
     if (!results.length)
@@ -172,7 +188,7 @@ const indexRecents = (req, res) => {
 //  AVREMO ALTRI PARAMETRI A CUI APPOGGIARCI PER FARLO, NON SARÁ(CREDO) NECESSARIA TUTTA QUESTA LOGICA (CHE SICURAMENTE É OTTIMIZZABILE)
 
 const showParfume = (req, res) => {
-  const id = req.params.id;
+  const slug = req.params.slug;
   const productSql = `
     SELECT 
       products.*,      
@@ -188,7 +204,7 @@ const showParfume = (req, res) => {
     LEFT JOIN discounts 
     ON discounts.id = products.discount_id
     
-    WHERE products.id = ?
+    WHERE products.slug = ?
   `;
 
   const ingredientsSql = `
@@ -202,7 +218,7 @@ const showParfume = (req, res) => {
     WHERE ingredients_products.product_id = ?
   `;
 
-  connection.query(productSql, [id], (err, productResult) => {
+  connection.query(productSql, [slug], (err, productResult) => {
     if (err) return res.status(500).json({ error: err });
     if (productResult.length === 0)
       return res.status(500).json({ error: "Product not found" });
@@ -434,6 +450,7 @@ const host = APP_PORT ? `${APP_URL}:${APP_PORT}` : APP_URL;
 function formatIndexResults(r) {
   const formattedResults = r.map((product) => ({
     id: product.id,
+    slug: product.slug,
     name: product.name,
     image: product.image_url,
     gender: product.gender_client,
