@@ -6,7 +6,7 @@ const appCarts = [];
 // LOGICA PER LA INDEX DI TUTTI I PRODOTTI, CON ANNESSE INFORMAZIONI SUL NOME DEL BRAND, LOGO DEL BRAND E SCONTO APPLICATO SUL SINGOLO PRODOTTO, SE ESISTENTE
 const index = (req, res) => {
   // # FILTRI FUNZIONANTI
-  let { product_name, brand_id, gender, max_price, min_price } = req.query;
+  let { product_name, brand_id, gender, max_price, min_price, order_by, size } = req.query;
   // # FILTRI DA AGGIUNGERE:
   // #  * discount_id (filtro nullo o presente, colonna nulla o presente --> 3 casi: si filtro si col, si filtro no col, no filtro)
   // #  * size_ml (o name)
@@ -78,13 +78,29 @@ const index = (req, res) => {
       `);
     sqlFilters.push(min_price);
   }
+  if (size) {
+    sqlFilters.length === 0
+      ? (sql += `
+        WHERE products.size_name = ?
+      `)
+      : (sql += `
+        AND products.size_name = ?
+      `);
+    sqlFilters.push(size);
+  }
 
-  sql += `
-    ORDER BY products.id ASC
-  `;
+  if (!order_by) {
+    sql += `
+      ORDER BY products.id ASC
+    `;
+  } else {
+    sql += `ORDER BY ` + order_by;
+  }
 
+  console.debug("sql", sql);
+  console.debug("sqlFilters", sqlFilters);
   connection.query(sql, sqlFilters, (err, results) => {
-    // console.debug(results);
+    console.debug(results);
 
     if (err) return res.status(500).json({ error: err });
     if (!results.length)
