@@ -13,130 +13,27 @@ const index = (req, res) => {
   // ?  * discount_id (filtro nullo o presente, colonna nulla o presente --> 3 casi: si filtro si col, si filtro no col, no filtro)
   // ?  * discount_amount ? (Forse dovrei fare seconda richiesta a db? Le prop che mi servirebbero arrivano da prima risposta del db)
 
-  console.debug("_________");
-  console.debug("product_name", product_name);
-  console.debug("brand_slug", brand_slug);
-  console.debug("gender", gender);
-  console.debug("max_price", max_price);
-  console.debug("min_price", min_price);
-  console.debug("order_by", order_by);
-  console.debug("size", size);
-
-
     if (brand_slug) {
-      console.debug("brand_slug", brand_slug);
-      // // getFilteredProducts(product_name, brand_id, gender, max_price, min_price, order_by, size);
-      return res.status(500).json({
-        message: "brand_slug filter not implemented yet",
-      });
-    } else {
-      // # SPOSTARE IN FUNZIONE SOTTO PER POTER RIUTILIZZARE SOPRA DOPO AVER OTTENUTO BRANDID
-      const sqlFilters = [];
-      let sql = `
+      const brandIdFromSlugSql = `
         SELECT 
-          products.*,  
-          brands.name AS brand_name, 
-          brands.logo AS brand_logo,
-          discounts.amount AS discount_amount
-        FROM products
+          brands.id AS brand_id
+        FROM brands
 
-        INNER JOIN brands 
-        ON products.brand_id = brands.id
-
-        LEFT JOIN discounts 
-        ON discounts.id = products.discount_id
+        WHERE brands.slug = ? 
       `;
-
-      if (product_name) {
-        sqlFilters.length === 0
-          ? (sql += `
-            WHERE products.name LIKE ?
-          `)
-          : (sql += `
-            AND products.name LIKE ?
-          `);
-        sqlFilters.push(`%${product_name}%`);
-      }
-      // if (brand_id) {
-      //   sqlFilters.length === 0
-      //     ? (sql += `
-      //       WHERE products.brand_id = ?
-      //     `)
-      //     : (sql += `
-      //       AND products.brand_id = ?
-      //     `);
-      //   sqlFilters.push(brand_id);
-      // }
-      if (gender) {
-        sqlFilters.length === 0
-          ? (sql += `
-            WHERE products.gender_client = ?
-          `)
-          : (sql += `
-            AND products.gender_client = ?
-          `);
-        sqlFilters.push(gender);
-      }
-      if (max_price) {
-        sqlFilters.length === 0
-          ? (sql += `
-            WHERE products.price < ?
-          `)
-          : (sql += `
-            AND products.price < ?
-          `);
-        sqlFilters.push(max_price);
-      }
-      if (min_price) {
-        sqlFilters.length === 0
-          ? (sql += `
-            WHERE products.price > ?
-          `)
-          : (sql += `
-            AND products.price > ?
-          `);
-        sqlFilters.push(min_price);
-      }
-      if (size) {
-        sqlFilters.length === 0
-          ? (sql += `
-            WHERE products.size_name = ?
-          `)
-          : (sql += `
-            AND products.size_name = ?
-          `);
-        sqlFilters.push(size);
-      }
-      if (size) {
-        sqlFilters.length === 0
-          ? (sql += `
-            WHERE products.size_name = ?
-          `)
-          : (sql += `
-            AND products.size_name = ?
-          `);
-        sqlFilters.push(size);
-      }
-      
-      if (!order_by) {
-        sql += `
-        ORDER BY products.id ASC
-        `;
-      } else {
-        sql += `ORDER BY ` + order_by;
-      }
-      
-      connection.query(sql, sqlFilters, (err, results) => {
-
+      connection.query(brandIdFromSlugSql, [brand_slug], (err, brand_id) => {
         if (err) return res.status(500).json({ error: err });
-        if (!results.length)
+        if (!brand_id.length)
           return res
             .status(404)
             .json({ pageErrorMessage: `I criteri per la ricerca non hanno fornito nessun risultato.` });
 
-        res.json(formatIndexResults(results));
+        console.debug("brand_id", brand_id);
+        getFilteredProducts(res, product_name, brand_id[0].brand_id, gender, max_price, min_price, order_by, size);
       });
-      // getFilteredProducts(product_name, null, gender, max_price, min_price, order_by, size);
+
+    } else {
+      getFilteredProducts(res, product_name, brand_slug, gender, max_price, min_price, order_by, size);
     }
 };
 
@@ -463,7 +360,7 @@ const generateNewIndex = () => {
 const { APP_URL, APP_PORT } = process.env;
 const host = APP_PORT ? `${APP_URL}:${APP_PORT}` : APP_URL;
 const formatImage = (image) => {
-  console.debug(image);
+  // console.debug(image);
   // * Definitivo da utilizzare in seguito
   // return image ? `${host}/images/parfumes/${image}` : `${host}/images/parfumes/placeholder.jpg`;
   return image ? `${image}` : `${host}/images/parfumes/placeholder.jpg`;
@@ -499,8 +396,112 @@ function formatIndexResults(r) {
 
 
 
-const getFilteredProducts = () => {
-  console.debug("getFilteredProducts called");
+const getFilteredProducts = (res, product_name, brand_id, gender, max_price, min_price, order_by, size) => {
+  const sqlFilters = [];
+  let sql = `
+    SELECT 
+      products.*,  
+      brands.name AS brand_name, 
+      brands.logo AS brand_logo,
+      discounts.amount AS discount_amount
+    FROM products
+
+    INNER JOIN brands 
+    ON products.brand_id = brands.id
+
+    LEFT JOIN discounts 
+    ON discounts.id = products.discount_id
+  `;
+
+  if (product_name) {
+    sqlFilters.length === 0
+      ? (sql += `
+        WHERE products.name LIKE ?
+      `)
+      : (sql += `
+        AND products.name LIKE ?
+      `);
+    sqlFilters.push(`%${product_name}%`);
+  }
+  if (brand_id) {
+    sqlFilters.length === 0
+      ? (sql += `
+        WHERE products.brand_id = ?
+      `)
+      : (sql += `
+        AND products.brand_id = ?
+      `);
+    sqlFilters.push(brand_id);
+  }
+  if (gender) {
+    sqlFilters.length === 0
+      ? (sql += `
+        WHERE products.gender_client = ?
+      `)
+      : (sql += `
+        AND products.gender_client = ?
+      `);
+    sqlFilters.push(gender);
+  }
+  if (max_price) {
+    sqlFilters.length === 0
+      ? (sql += `
+        WHERE products.price < ?
+      `)
+      : (sql += `
+        AND products.price < ?
+      `);
+    sqlFilters.push(max_price);
+  }
+  if (min_price) {
+    sqlFilters.length === 0
+      ? (sql += `
+        WHERE products.price > ?
+      `)
+      : (sql += `
+        AND products.price > ?
+      `);
+    sqlFilters.push(min_price);
+  }
+  if (size) {
+    sqlFilters.length === 0
+      ? (sql += `
+        WHERE products.size_name = ?
+      `)
+      : (sql += `
+        AND products.size_name = ?
+      `);
+    sqlFilters.push(size);
+  }
+  if (size) {
+    sqlFilters.length === 0
+      ? (sql += `
+        WHERE products.size_name = ?
+      `)
+      : (sql += `
+        AND products.size_name = ?
+      `);
+    sqlFilters.push(size);
+  }
+  
+  if (!order_by) {
+    sql += `
+    ORDER BY products.id ASC
+    `;
+  } else {
+    sql += `ORDER BY ` + order_by;
+  }
+  
+  connection.query(sql, sqlFilters, (err, results) => {
+
+    if (err) return res.status(500).json({ error: err });
+    if (!results.length)
+      return res
+        .status(404)
+        .json({ pageErrorMessage: `I criteri per la ricerca non hanno fornito nessun risultato.` });
+
+    res.json(formatIndexResults(results));
+  });
 }
 
 module.exports = {
@@ -508,8 +509,4 @@ module.exports = {
   indexBestSellers,
   indexRecents,
   showParfume,
-  // cartShow,
-  // cartAdd,
-  // cartRemove,
-  // appCarts,
 };
