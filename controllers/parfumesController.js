@@ -205,7 +205,7 @@ const showParfume = (req, res) => {
   
   console.debug("req.params", req.params);
   // console.debug(slug);
-  const slug = req.params.id;
+  const slug = req.params.slug;
 
 
   const productSql = `
@@ -259,187 +259,187 @@ const showParfume = (req, res) => {
   });
 };
 
-const cartShow = (req, res) => {
-  let { cart_id } = req.body;
+// const cartShow = (req, res) => {
+//   let { cart_id } = req.body;
 
-  let client_cart = appCarts.find((cart) => cart.id === cart_id);
-  console.log("client_cart", client_cart);
+//   let client_cart = appCarts.find((cart) => cart.id === cart_id);
+//   console.log("client_cart", client_cart);
 
-  // * DEBUG
-  // client_cart = appCarts[0];
+//   // * DEBUG
+//   // client_cart = appCarts[0];
 
-  if (!client_cart) {
-    return res.status(404).json({
-      description: `Carello non trovato`,
-    });
-  }
+//   if (!client_cart) {
+//     return res.status(404).json({
+//       description: `Carello non trovato`,
+//     });
+//   }
 
-  res.json({
-    description: `cartShow (${cart_id})`,
-    client_cart,
-  });
-};
+//   res.json({
+//     description: `cartShow (${cart_id})`,
+//     client_cart,
+//   });
+// };
 
-const cartAdd = (req, res) => {
-  let { cart_id, product_id } = req.body;
-  // console.log(appCarts);
-  // console.log("cart_id", cart_id);
-  // console.log("typeof(cart_id)", typeof(cart_id));
-  console.log("product_id", product_id);
-  console.log("typeof(product_id)", typeof product_id);
+// const cartAdd = (req, res) => {
+//   let { cart_id, product_id } = req.body;
+//   // console.log(appCarts);
+//   // console.log("cart_id", cart_id);
+//   // console.log("typeof(cart_id)", typeof(cart_id));
+//   console.log("product_id", product_id);
+//   console.log("typeof(product_id)", typeof product_id);
 
-  if (!cart_id) {
-    const newCartId = generateNewIndex();
-    console.log("newCartId", newCartId);
+//   if (!cart_id) {
+//     const newCartId = generateNewIndex();
+//     console.log("newCartId", newCartId);
 
-    // # ATTENZIONE
-    // todo:
-    // - Quanto commentato sotto andrebbe (senza priorita) implementato per poter cancellare la riga, sopra, in cui creo forzatamente un array di appCarts vuoto. In questo modo lo creerei dinamicamente
-    // if (!appCarts) {
-    // // if (appCarts === undefined) {
-    //   appCarts = [];
-    // }
-    // console.log("appCarts", appCarts);
+//     // # ATTENZIONE
+//     // todo:
+//     // - Quanto commentato sotto andrebbe (senza priorita) implementato per poter cancellare la riga, sopra, in cui creo forzatamente un array di appCarts vuoto. In questo modo lo creerei dinamicamente
+//     // if (!appCarts) {
+//     // // if (appCarts === undefined) {
+//     //   appCarts = [];
+//     // }
+//     // console.log("appCarts", appCarts);
 
-    const newCart = {
-      id: newCartId,
-      products: [],
-    };
-    appCarts.push(newCart);
+//     const newCart = {
+//       id: newCartId,
+//       products: [],
+//     };
+//     appCarts.push(newCart);
 
-    // return res
-    //   .json({
-    //       description: `Devo creare il carrello`,
-    //       newCartId
-    //   });
-    cart_id = newCartId;
-  }
+//     // return res
+//     //   .json({
+//     //       description: `Devo creare il carrello`,
+//     //       newCartId
+//     //   });
+//     cart_id = newCartId;
+//   }
 
-  const client_cart = appCarts.find((cart) => cart.id === cart_id);
-  console.log("client_cart", client_cart);
+//   const client_cart = appCarts.find((cart) => cart.id === cart_id);
+//   console.log("client_cart", client_cart);
 
-  if (!client_cart) {
-    return res.status(404).json({
-      description: `Carello non trovato`,
-    });
-  }
+//   if (!client_cart) {
+//     return res.status(404).json({
+//       description: `Carello non trovato`,
+//     });
+//   }
 
-  const isProductInCart =
-    client_cart.products.find((product) => product.id === product_id) ===
-    undefined
-      ? false
-      : true;
-  console.log("isProductInCart", isProductInCart);
+//   const isProductInCart =
+//     client_cart.products.find((product) => product.id === product_id) ===
+//     undefined
+//       ? false
+//       : true;
+//   console.log("isProductInCart", isProductInCart);
 
-  if (isProductInCart) {
-    const product = client_cart.products.find(
-      (product) => product.id === product_id
-    );
-    console.log("product", product);
-    product.quantity += 1;
-    res.json({
-      description: `cartAdd (${cart_id} - product_id: ${product_id})`,
-      client_cart,
-    });
-  } else {
-    const productSql = `
-      SELECT 
-        products.*,
-        brands.name AS brand_name, 
-        brands.logo AS brand_logo,
-        discounts.amount AS discount_amount
+//   if (isProductInCart) {
+//     const product = client_cart.products.find(
+//       (product) => product.id === product_id
+//     );
+//     console.log("product", product);
+//     product.quantity += 1;
+//     res.json({
+//       description: `cartAdd (${cart_id} - product_id: ${product_id})`,
+//       client_cart,
+//     });
+//   } else {
+//     const productSql = `
+//       SELECT 
+//         products.*,
+//         brands.name AS brand_name, 
+//         brands.logo AS brand_logo,
+//         discounts.amount AS discount_amount
 
-      FROM products
+//       FROM products
 
-      INNER JOIN brands 
-      ON products.brand_id = brands.id
+//       INNER JOIN brands 
+//       ON products.brand_id = brands.id
 
-      LEFT JOIN discounts 
-      ON discounts.id = products.discount_id
+//       LEFT JOIN discounts 
+//       ON discounts.id = products.discount_id
 
-      WHERE products.id = ?
+//       WHERE products.id = ?
 
-      ORDER BY products.id ASC
-    `;
+//       ORDER BY products.id ASC
+//     `;
 
-    const ingredientsSql = `
-      SELECT ingredients.*, 
-      ingredients_products.percentage AS percentage
-      FROM ingredients
+//     const ingredientsSql = `
+//       SELECT ingredients.*, 
+//       ingredients_products.percentage AS percentage
+//       FROM ingredients
 
-      INNER JOIN ingredients_products 
-      ON ingredients_products.ingredient_id = ingredients.id
+//       INNER JOIN ingredients_products 
+//       ON ingredients_products.ingredient_id = ingredients.id
 
-      WHERE ingredients_products.product_id = ?
-    `;
+//       WHERE ingredients_products.product_id = ?
+//     `;
 
-    connection.query(productSql, [product_id], (err, productResult) => {
-      if (err) return res.status(500).json({ error: err });
-      if (productResult.length === 0)
-        return res
-          .status(404)
-          .json({ error: `Product ${product_id} not found` });
-      const product = productResult[0];
-      connection.query(
-        ingredientsSql,
-        [product_id],
-        (err, ingredientsResult) => {
-          if (err) return res.status(500).json({ error: err });
-          if (productResult.length === 0)
-            return res.status(404).json({
-              error: `Ingredients not found for product: ${product_id}.`,
-            });
-          product.ingredients = ingredientsResult.map((ingredient) => {
-            return {
-              name: ingredient.name,
-              percentage: ingredient.percentage,
-            };
-          });
+//     connection.query(productSql, [product_id], (err, productResult) => {
+//       if (err) return res.status(500).json({ error: err });
+//       if (productResult.length === 0)
+//         return res
+//           .status(404)
+//           .json({ error: `Product ${product_id} not found` });
+//       const product = productResult[0];
+//       connection.query(
+//         ingredientsSql,
+//         [product_id],
+//         (err, ingredientsResult) => {
+//           if (err) return res.status(500).json({ error: err });
+//           if (productResult.length === 0)
+//             return res.status(404).json({
+//               error: `Ingredients not found for product: ${product_id}.`,
+//             });
+//           product.ingredients = ingredientsResult.map((ingredient) => {
+//             return {
+//               name: ingredient.name,
+//               percentage: ingredient.percentage,
+//             };
+//           });
 
-          product.quantity = 1; // Aggiungo la proprietà quantity al prodotto
-          client_cart.products.push(product);
-          res.json({
-            description: `cartAdd (${cart_id} - product_id: ${product_id})`,
-            client_cart,
-          });
-        }
-      );
-    });
-  }
-};
+//           product.quantity = 1; // Aggiungo la proprietà quantity al prodotto
+//           client_cart.products.push(product);
+//           res.json({
+//             description: `cartAdd (${cart_id} - product_id: ${product_id})`,
+//             client_cart,
+//           });
+//         }
+//       );
+//     });
+//   }
+// };
 
-const cartRemove = (req, res) => {
-  const { cart_id, product_id } = req.body;
+// const cartRemove = (req, res) => {
+//   const { cart_id, product_id } = req.body;
 
-  const client_cart = appCarts.find((cart) => cart.id === cart_id);
+//   const client_cart = appCarts.find((cart) => cart.id === cart_id);
 
-  if (!client_cart) {
-    return res.status(404).json({
-      description: `Carello non trovato`,
-    });
-  }
+//   if (!client_cart) {
+//     return res.status(404).json({
+//       description: `Carello non trovato`,
+//     });
+//   }
 
-  // const isProductInCart = client_cart.products.find(product => product.id === product_id) === undefined ? false : true;
-  const isProductInCart = client_cart.products.find(
-    (product) => product.id === product_id
-  );
+//   // const isProductInCart = client_cart.products.find(product => product.id === product_id) === undefined ? false : true;
+//   const isProductInCart = client_cart.products.find(
+//     (product) => product.id === product_id
+//   );
 
-  if (isProductInCart) {
-    client_cart.products.splice(
-      client_cart.products.indexOf(isProductInCart),
-      1
-    );
-  } else {
-    return res.status(404).json({
-      description: `Prodotto ${product_id} non trovato nel carrello: ${cart_id}. Impossibile cancellare il prodotto`,
-    });
-  }
+//   if (isProductInCart) {
+//     client_cart.products.splice(
+//       client_cart.products.indexOf(isProductInCart),
+//       1
+//     );
+//   } else {
+//     return res.status(404).json({
+//       description: `Prodotto ${product_id} non trovato nel carrello: ${cart_id}. Impossibile cancellare il prodotto`,
+//     });
+//   }
 
-  res.json({
-    description: `cartRemove (${cart_id} - product_id: ${product_id})`,
-    client_cart,
-  });
-};
+//   res.json({
+//     description: `cartRemove (${cart_id} - product_id: ${product_id})`,
+//     client_cart,
+//   });
+// };
 
 const generateNewIndex = () => {
   const options = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -467,6 +467,7 @@ const formatImage = (image) => {
   // * Definitivo da utilizzare in seguito
   // return image ? `${host}/images/parfumes/${image}` : `${host}/images/parfumes/placeholder.jpg`;
   return image ? `${image}` : `${host}/images/parfumes/placeholder.jpg`;
+  // return `${host}/images/parfumes/placeholder.jpg`;
 };
 
 function formatIndexResults(r) {
@@ -507,8 +508,8 @@ module.exports = {
   indexBestSellers,
   indexRecents,
   showParfume,
-  cartShow,
-  cartAdd,
-  cartRemove,
-  appCarts,
+  // cartShow,
+  // cartAdd,
+  // cartRemove,
+  // appCarts,
 };
