@@ -9,11 +9,11 @@ parfumesRouter.get("/bestsellers", parfumesController.indexBestSellers);
 parfumesRouter.get("/recents", parfumesController.indexRecents);
 
 
-parfumesRouter.get("/cartShow", parfumesController.cartShow);
-parfumesRouter.post("/cartAdd", parfumesController.cartAdd);
-parfumesRouter.delete("/cartRemove", parfumesController.cartRemove);
+// parfumesRouter.get("/cartShow", parfumesController.cartShow);
+// parfumesRouter.post("/cartAdd", parfumesController.cartAdd);
+// parfumesRouter.delete("/cartRemove", parfumesController.cartRemove);
 
 // SHOW
-parfumesRouter.get("/:id", parfumesController.showParfume);
+parfumesRouter.get("/:slug", parfumesController.showParfume);
 
 module.exports = parfumesRouter;
