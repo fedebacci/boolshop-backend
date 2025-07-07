@@ -4,48 +4,24 @@ const connection = require("../db/connection");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 
+const now = new Date();
+
+const year = now.getFullYear(); // Anno (es. 2025)
+const month = now.getMonth() + 1; // Mese (0-11, quindi aggiungi +1)
+const day = now.getDate(); // Giorno del mese (1-31)
+const hours = now.getHours(); // Ore (0-23)
+const minutes = now.getMinutes(); // Minuti (0-59)
+const seconds = now.getSeconds();
+
+const currentDate = `${year}-${month.toString().padStart(2, "0")}-${day
+  .toString()
+  .padStart(2, "0")} ${hours.toString().padStart(2, "0")}:${minutes
+  .toString()
+  .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 const HOST_MAIL = process.env.EMAIL_HOST;
 const APP_PW_HOST = process.env.APP_PW_HOST;
-// const { appCarts } = require("./parfumesController");
-// cart = {
-//   id: 1,
-//   products: [
-//     {
-//       id: 1,
-//       name: "Sauvage",
-//       image_url: "",
-//       // ?
-//       gender_client: "male",
-//       price: "90.00",
-//       size_ml: 75,
-//       // ?
-//       size_name: "xs",
-//       brand_name: "Dior",
-//       discount_amount: 10,
-//       quantity: 2,
-//     },
-//     {
-//       id: 2,
-//       name: "Miss Dior",
-//       image_url: "",
-//       // ?
-//       gender_client: "female",
-//       price: "100.00",
-//       size_ml: 75,
-//       // ?
-//       size_name: "xs",
-//       brand_name: "Dior",
-//       discount_amount: 20,
-//       quantity: 1,
-//     },
-//   ],
-// };
-
-// const carts = appCarts;
 
 const storeCheckout = (req, res) => {
-  // console.log(carts);
-
   const {
     email,
     first_name,
@@ -73,7 +49,7 @@ const storeCheckout = (req, res) => {
   // const cart = carts.find((c) => c.id === req.body.cart_id);
   const cart = req.body.cart;
 
-  // 1. PRENDI E CONTROLLA CODICE SCONTO DAL DATABASE
+  // 1. PRENDI E CONTROLLA CODICE SCONTO DAL DATABASE CON DATE
   const discountSql =
     "SELECT discount_codes.* FROM discount_codes WHERE code = ?";
   connection.query(discountSql, [user_discount_code], (err, discountResult) => {
@@ -84,6 +60,22 @@ const storeCheckout = (req, res) => {
       discountResult.length > 0 ? discountResult[0].amount : 0;
     const discountCodeId =
       discountResult.length > 0 ? discountResult[0].id : null;
+    const discountStart =
+      discountResult.length > 0 ? discountResult[0].start_date : null;
+    const discountEnd =
+      discountResult.length > 0 ? discountResult[0].end_date : null;
+
+    // DA CONTROLLARE COME MAI NON FUNZIONA CON DATE, PROBABILMENTE È UN PROBLEMA DI COMPARAZIONE STRINGHE
+
+    console.log("Data odierna:", currentDate);
+    console.log("Data inizio sconto:", discountStart);
+    console.log("Data inizio sconto:", discountEnd);
+
+    if (currentDate < discountStart || currentDate > discountEnd) {
+      return res
+        .status(400)
+        .json({ error: "Codice sconto non valido o scaduto" });
+    }
 
     // CALCOLO E PREPARAZIONE DEI DATI PER L'ORDINE
 
@@ -208,7 +200,23 @@ const storeCheckout = (req, res) => {
               from: HOST_MAIL,
               to: clientInfosValues[0],
               subject: "Conferma Ordine Boolshop",
-              text: `${orderRecap}`,
+              text: `Stato ordine: ${orderRecap.message}
+              ID Ordine: ${orderRecap.orderId}
+              Prezzo Totale: €${orderRecap.total_price}
+              Prezzo Spedizione: €${orderRecap.shipment_price}
+              Codice Sconto: ${
+                user_discount_code ? user_discount_code : "Nessuno"
+              }
+              Sconto Applicato: ${orderRecap.discountAmount}%
+              Prezzo Finale: €${orderRecap.final_price}
+              Dettagli Carrello:
+              ${orderRecap.checkoutCart.cartProducts.map((product) => {
+                return `
+                  Nome: ${product.productName}
+                  Brand: ${product.productBrandName}
+                  Quantità: ${product.quantity}
+                `;
+              })}`,
             };
 
             transporter.sendMail(mailOptions, (error, info) => {
@@ -228,6 +236,8 @@ const storeCheckout = (req, res) => {
     });
   });
 };
+
+// FARE UNA GET PER I DISCOUNT CODES, COSI DA POTERLI MOSTRARE NEL FRONTEND, VEDIAMO INSIEME SE RIUSCIAMO, ALTRIMENTI TUTTA LA VALIDAZIONE BACK C'É
 
 module.exports = {
   storeCheckout,
