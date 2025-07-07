@@ -115,10 +115,6 @@ const storeCheckout = (req, res) => {
         .toFixed(2)
     );
 
-    const final_price = parseFloat(
-      (total_price - (total_price * discountAmount) / 100).toFixed(2)
-    );
-
     //  CALCOLO SPEDIZIONE
     const setShipmentPrice = (country, total_price) => {
       let shipment_price;
@@ -137,6 +133,14 @@ const storeCheckout = (req, res) => {
     };
 
     const shipment_price = setShipmentPrice(country, total_price);
+
+    const final_price = parseFloat(
+      (
+        total_price -
+        (total_price * discountAmount) / 100 +
+        shipment_price
+      ).toFixed(2)
+    );
 
     //    INSERT DEI DATI DEL CLIENTE NEL DB
     const clientSql = `
