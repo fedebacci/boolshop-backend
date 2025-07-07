@@ -1,6 +1,11 @@
 // const cart = require("../db/cart")
 const express = require("express");
 const connection = require("../db/connection");
+const nodemailer = require("nodemailer");
+require("dotenv").config();
+
+const HOST_MAIL = process.env.EMAIL_HOST;
+const APP_PW_HOST = process.env.APP_PW_HOST;
 // const { appCarts } = require("./parfumesController");
 // cart = {
 //   id: 1,
@@ -172,9 +177,7 @@ const storeCheckout = (req, res) => {
             if (err) return res.status(500).json({ error: err });
 
             // CREARE PAYMENTINTENT CON STRIPE OPPURE QUI, ANCORA NON SO BENE ???
-
-            // RISPOSTA FINALE (DA CAMBIARE SICURAMENTE, AGGIUNTA STRIPE PAYMENT)
-            res.json({
+            const orderRecap = {
               message: "Ordine completato!",
               orderId,
               clientId,
@@ -183,6 +186,36 @@ const storeCheckout = (req, res) => {
               final_price,
               shipment_price,
               checkoutCart,
+            };
+            // RISPOSTA FINALE (DA CAMBIARE SICURAMENTE, AGGIUNTA STRIPE PAYMENT)
+
+            const transporter = nodemailer.createTransport({
+              host: "smtp.gmail.com",
+              port: 587, // 465 per SSL
+              secure: false, // true per 465, false per altri
+              auth: {
+                user: HOST_MAIL,
+                pass: APP_PW_HOST,
+              },
+            });
+            console.log(clientInfosValues);
+
+            const mailOptions = {
+              from: HOST_MAIL,
+              to: clientInfosValues[0],
+              subject: "Conferma Ordine Boolshop",
+              text: `${orderRecap}`,
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+              if (error) {
+                console.error("Errore nell'invio dell'email:", error);
+              } else {
+                console.log("Email inviata:", info.response);
+              }
+            });
+            res.json({
+              orderRecap,
               // RITORNARE client_secret AL FRONTEND PER STRIPE
             });
           });
