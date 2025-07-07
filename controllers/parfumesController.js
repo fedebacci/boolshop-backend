@@ -363,8 +363,7 @@ const formatImage = (image) => {
   // console.debug(image);
   // * Definitivo da utilizzare in seguito
   // return image ? `${host}/images/parfumes/${image}` : `${host}/images/parfumes/placeholder.jpg`;
-  return image ? `${image}` : `${host}/images/parfumes/placeholder.jpg`;
-  // return `${host}/images/parfumes/placeholder.jpg`;
+  return image ? `${host}/images/parfumes/Immagini Fede/${image}` : `${host}/images/parfumes/placeholder.jpg`;
 };
 
 function formatIndexResults(r) {
