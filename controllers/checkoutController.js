@@ -88,6 +88,8 @@ const storeCheckout = (req, res) => {
       cartProducts: cart.map((product) => {
         return {
           productId: product.id,
+          productName: product.name,
+          productBrandName: product.brand.brand_name,
           productFinalPrice: parseFloat(
             product.price -
               (product.price * product.discount.discount_amount) / 100
@@ -145,7 +147,7 @@ const storeCheckout = (req, res) => {
       const orderSql = `
         INSERT INTO orders (client_id, total_price, shipment_price, discount_code_id)
         VALUES (?, ?, ?, ?)
-      `;
+        `;
       connection.query(
         orderSql,
         [clientId, total_price, shipment_price, discountCodeId],
@@ -163,8 +165,13 @@ const storeCheckout = (req, res) => {
             p.id,
             p.quantity,
           ]);
+
+          // CREARE PAYMENTINTENT CON STRIPE QUI ???
+
           connection.query(orderProductsSql, [orderProductsValues], (err) => {
             if (err) return res.status(500).json({ error: err });
+
+            // CREARE PAYMENTINTENT CON STRIPE OPPURE QUI, ANCORA NON SO BENE ???
 
             // RISPOSTA FINALE (DA CAMBIARE SICURAMENTE, AGGIUNTA STRIPE PAYMENT)
             res.json({
@@ -176,6 +183,7 @@ const storeCheckout = (req, res) => {
               final_price,
               shipment_price,
               checkoutCart,
+              // RITORNARE client_secret AL FRONTEND PER STRIPE
             });
           });
         }
