@@ -1,43 +1,8 @@
-// const cart = require("../db/cart")
 const connection = require("../db/connection");
+const Stripe = require("stripe");
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY); // METTERE LA TUA CHIAVE SEGRETA DI STRIPE QUI
 
-cart = {
-  id: 1,
-  products: [
-    {
-      id: 1,
-      name: "Sauvage",
-      image_url: "",
-      // ?
-      gender_client: "male",
-      price: "90.00",
-      size_ml: 75,
-      // ?
-      size_name: "xs",
-      brand_name: "Dior",
-      discount_amount: 10,
-      quantity: 2,
-    },
-    {
-      id: 2,
-      name: "Miss Dior",
-      image_url: "",
-      // ?
-      gender_client: "female",
-      price: "100.00",
-      size_ml: 75,
-      // ?
-      size_name: "xs",
-      brand_name: "Dior",
-      discount_amount: 20,
-      quantity: 1,
-    },
-  ],
-};
-
-const storeCheckout = (req, res) => {
-  // REQUIRE DEL CART (PER ORA HARD-CODATO)
-
+const storeCheckoutTest = async (req, res) => {
   const {
     email,
     first_name,
@@ -63,10 +28,14 @@ const storeCheckout = (req, res) => {
 
   // PRENDI E CONTROLLA CODICE SCONTO DAL DATABASE
   const discountSql = "SELECT amount FROM discount_codes WHERE code = ?";
-  connection.query(discountSql, [user_discount_code], (err, discountResult) => {
-    if (err) return res.status(500).json({ error: err });
+  try {
+    const discountResult = await new Promise((resolve, reject) => {
+      connection.query(discountSql, [user_discount_code], (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
 
-    // SE CODICE INSESISTENTE, CODICE SCONTO = 0
     const discountAmount =
       discountResult.length > 0 ? discountResult[0].amount : 0;
 
@@ -74,6 +43,7 @@ const storeCheckout = (req, res) => {
       cartId: cart.id,
       cartProducts: cart.products.map((product) => {
         return {
+          productName: product.name,
           productId: product.id,
           productFinalPrice:
             product.price - (product.price * product.discount_amount) / 100,
@@ -83,17 +53,12 @@ const storeCheckout = (req, res) => {
         };
       }),
     };
-    console.log(checkoutCart);
+
     const total_price = checkoutCart.cartProducts.reduce((acc, p) => {
       return acc + p.productFinalPrice * p.quantity;
     }, 0);
-    console.log(total_price);
-
-    // APPLICO SCONTO DEL CODICE SCONTO SU PREZZO TOTALE
 
     const final_price = total_price - (total_price * discountAmount) / 100;
-
-    // GESTIONE PREZZI DI SPEDIZIONE IN BASE AL PAESE DI DESTINAZIONE O AL PREZZO TOTALE(GRATUITA OLTRE I 100€)
 
     const setShippingPrice = (country, total_price) => {
       let shipping_price;
@@ -113,16 +78,43 @@ const storeCheckout = (req, res) => {
 
     const shipping_price = setShippingPrice(country, total_price);
 
-    res.json({
-      checkoutCart,
-      total_price,
-      final_price,
-      shipping_price,
-      discountAmount,
+    // CREA LA PAYMENT INTENT STRIPE
+    const amountToPay = Math.round((final_price + shipping_price) * 100);
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountToPay,
+      currency: "eur",
+      metadata: {
+        email: email,
+        cartId: cart.id.toString(),
+      },
     });
-  });
+
+    const orderRecap = {
+      email,
+      first_name,
+      last_name,
+      country,
+      city,
+      postal_code,
+      street,
+      civic_number,
+      total_price: total_price.toFixed(2),
+      final_price: final_price.toFixed(2),
+      shipping_price: shipping_price.toFixed(2),
+      discountAmount: discountAmount.toFixed(2),
+    };
+
+    res.json({
+      orderRecap,
+      checkoutCart,
+      clientSecret: paymentIntent.client_secret,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 module.exports = {
-  storeCheckout,
+  storeCheckoutTest,
 };

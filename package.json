@@ -20,6 +20,7 @@
     "express": "^5.1.0",
     "mailer": "^0.6.6",
     "mysql2": "^3.14.1",
-    "nodemailer": "^7.0.4"
+    "nodemailer": "^7.0.4",
+    "stripe": "^18.3.0"
   }
 }
