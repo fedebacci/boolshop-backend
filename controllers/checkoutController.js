@@ -63,15 +63,21 @@ const storeCheckout = (req, res) => {
     console.log("Data odierna:", now);
     console.log("Data inizio sconto:", discountStart);
     console.log("Data fine sconto:", discountEnd);
+    console.log("now < discountStart", now < discountStart);
+    console.log("now > discountEnd", now > discountEnd);
+    console.log("user_discount_code", user_discount_code);
+    console.log("user_discount_code !== ''", user_discount_code !== '');
 
-    if (!discountStart || !discountEnd) {
-      return res.status(400).json({ error: "Codice sconto non valido" });
-    }
-
-    if (now < discountStart || now > discountEnd) {
-      return res
-        .status(400)
-        .json({ error: "Codice sconto non valido o scaduto" });
+    if (user_discount_code !== "") {
+      if (!discountStart || !discountEnd) {
+        return res.status(400).json({ error: "Codice sconto non valido" });
+      }
+  
+      if (now < discountStart || now > discountEnd) {
+        return res
+          .status(400)
+          .json({ error: "Codice sconto non valido o scaduto" });
+      }
     }
 
     // CALCOLO E PREPARAZIONE DEI DATI PER L'ORDINE
