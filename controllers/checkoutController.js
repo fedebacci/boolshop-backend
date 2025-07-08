@@ -6,18 +6,11 @@ require("dotenv").config();
 
 const now = new Date();
 
-const year = now.getFullYear(); // Anno (es. 2025)
-const month = now.getMonth() + 1; // Mese (0-11, quindi aggiungi +1)
-const day = now.getDate(); // Giorno del mese (1-31)
-const hours = now.getHours(); // Ore (0-23)
-const minutes = now.getMinutes(); // Minuti (0-59)
-const seconds = now.getSeconds();
+// function getNowInISO() {
+//   const now = new Date();
+//   return now.toISOString();
+// }
 
-const currentDate = `${year}-${month.toString().padStart(2, "0")}-${day
-  .toString()
-  .padStart(2, "0")} ${hours.toString().padStart(2, "0")}:${minutes
-  .toString()
-  .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 const HOST_MAIL = process.env.EMAIL_HOST;
 const APP_PW_HOST = process.env.APP_PW_HOST;
 
@@ -61,17 +54,21 @@ const storeCheckout = (req, res) => {
     const discountCodeId =
       discountResult.length > 0 ? discountResult[0].id : null;
     const discountStart =
-      discountResult.length > 0 ? discountResult[0].start_date : null;
+      discountResult.length > 0 ? new Date(discountResult[0].start_date) : null;
     const discountEnd =
-      discountResult.length > 0 ? discountResult[0].end_date : null;
+      discountResult.length > 0 ? new Date(discountResult[0].end_date) : null;
 
     // DA CONTROLLARE COME MAI NON FUNZIONA CON DATE, PROBABILMENTE È UN PROBLEMA DI COMPARAZIONE STRINGHE
 
-    console.log("Data odierna:", currentDate);
+    console.log("Data odierna:", now);
     console.log("Data inizio sconto:", discountStart);
-    console.log("Data inizio sconto:", discountEnd);
+    console.log("Data fine sconto:", discountEnd);
 
-    if (currentDate < discountStart || currentDate > discountEnd) {
+    if (!discountStart || !discountEnd) {
+      return res.status(400).json({ error: "Codice sconto non valido" });
+    }
+
+    if (now < discountStart || now > discountEnd) {
       return res
         .status(400)
         .json({ error: "Codice sconto non valido o scaduto" });
