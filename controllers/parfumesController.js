@@ -7,10 +7,12 @@ const appCarts = [];
 const index = (req, res) => {
 
   // # FILTRI FUNZIONANTI
-  let { product_name, brand_slug, gender, max_price, min_price, order_by, size } = req.query;
-
+  let { product_name, brand_slug, gender, max_price, min_price, order_by, size, discounted } = req.query;
+  // // ?  * discount_id (filtro nullo o presente, colonna nulla o presente --> 3 casi: si filtro si col, si filtro no col, no filtro)
+  // // * Dovrebbe essere undefined, true o false
+  // console.debug("discounted", discounted);
+  
   // ? FILTRI DA AGGIUNGERE:
-  // ?  * discount_id (filtro nullo o presente, colonna nulla o presente --> 3 casi: si filtro si col, si filtro no col, no filtro)
   // ?  * discount_amount ? (Forse dovrei fare seconda richiesta a db? Le prop che mi servirebbero arrivano da prima risposta del db)
 
     if (brand_slug) {
@@ -29,11 +31,11 @@ const index = (req, res) => {
             .json({ pageErrorMessage: `I criteri per la ricerca non hanno fornito nessun risultato.` });
 
         console.debug("brand_id", brand_id);
-        getFilteredProducts(res, product_name, brand_id[0].brand_id, gender, max_price, min_price, order_by, size);
+        getFilteredProducts(res, product_name, brand_id[0].brand_id, gender, max_price, min_price, order_by, size, discounted);
       });
 
     } else {
-      getFilteredProducts(res, product_name, brand_slug, gender, max_price, min_price, order_by, size);
+      getFilteredProducts(res, product_name, brand_slug, gender, max_price, min_price, order_by, size, discounted);
     }
 };
 
@@ -395,7 +397,12 @@ function formatIndexResults(r) {
 
 
 
-const getFilteredProducts = (res, product_name, brand_id, gender, max_price, min_price, order_by, size) => {
+const getFilteredProducts = (res, product_name, brand_id, gender, max_price, min_price, order_by, size, discounted) => {
+  // ?  * discount_id (filtro nullo o presente, colonna nulla o presente --> 3 casi: si filtro si col, si filtro no col, no filtro)
+  // * Dovrebbe essere undefined, true o false
+  console.debug("discounted", discounted);
+
+
   const sqlFilters = [];
   let sql = `
     SELECT 
@@ -481,6 +488,25 @@ const getFilteredProducts = (res, product_name, brand_id, gender, max_price, min
         AND products.size_name = ?
       `);
     sqlFilters.push(size);
+  }
+
+  // ISNULL(products.discount_id) = 1
+  if (discounted) {
+    sqlFilters.length === 0
+      ? (sql += `
+        WHERE ISNULL(products.discount_id) = ?
+      `)
+      : (sql += `
+        AND ISNULL(products.discount_id) = ?
+      `);
+
+    if (discounted === "true") {
+      sqlFilters.push(0); // Per ottenere i prodotti con sconto
+    } else if (discounted === "false") {
+      sqlFilters.push(1); // Per ottenere i prodotti senza sconto
+    } else {
+      sqlFilters.push(0); // Default, per ottenere tutti i prodotti
+    }
   }
   
   if (!order_by) {
