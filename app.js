@@ -6,6 +6,7 @@ const parfumesRouter = require("./routers/parfumesRouter");
 const checkoutRouter = require("./routers/checkoutRouter");
 const { errorsHandler } = require("./middlewares/errorsHandler");
 const { notFound } = require("./middlewares/notFound");
+const stripeWebhook = require("./controllers/stripeWebhookControllerTest");
 
 // # CONFIG
 const app = express();
@@ -40,6 +41,7 @@ app.get("/", (req, res) => {
 // # ROUTERS
 app.use("/parfumes", parfumesRouter);
 app.use("/checkout", checkoutRouter);
+app.use(stripeWebhook);
 
 // # ERROR HANDLING MIDDLEWARES
 app.use(notFound);

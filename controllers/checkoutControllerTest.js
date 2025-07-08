@@ -13,6 +13,7 @@ const storeCheckoutTest = async (req, res) => {
     street,
     civic_number,
     user_discount_code,
+    cart,
   } = req.body;
 
   const clientInfosValues = [
@@ -28,6 +29,8 @@ const storeCheckoutTest = async (req, res) => {
 
   // PRENDI E CONTROLLA CODICE SCONTO DAL DATABASE
   const discountSql = "SELECT amount FROM discount_codes WHERE code = ?";
+
+  console.log(req.body.cart);
   try {
     const discountResult = await new Promise((resolve, reject) => {
       connection.query(discountSql, [user_discount_code], (err, result) => {
@@ -38,25 +41,48 @@ const storeCheckoutTest = async (req, res) => {
 
     const discountAmount =
       discountResult.length > 0 ? discountResult[0].amount : 0;
+    const discountCodeId =
+      discountResult.length > 0 ? discountResult[0].id : null;
+    const discountStart =
+      discountResult.length > 0 ? new Date(discountResult[0].start_date) : null;
+    const discountEnd =
+      discountResult.length > 0 ? new Date(discountResult[0].end_date) : null;
+    if (user_discount_code !== "") {
+      if (!discountStart || !discountEnd) {
+        return res.status(400).json({ error: "Codice sconto non valido" });
+      }
+
+      if (now < discountStart || now > discountEnd) {
+        return res
+          .status(400)
+          .json({ error: "Codice sconto non valido o scaduto" });
+      }
+    }
 
     const checkoutCart = {
-      cartId: cart.id,
-      cartProducts: cart.products.map((product) => {
+      cartProducts: cart.map((product) => {
         return {
-          productName: product.name,
           productId: product.id,
-          productFinalPrice:
-            product.price - (product.price * product.discount_amount) / 100,
+          productName: product.name,
+          productBrandName: product.brand.brand_name,
+          productFinalPrice: parseFloat(
+            product.price -
+              (product.price * product.discount.discount_amount) / 100
+          ).toFixed(2),
           productSize: product.size_ml,
-          productBrand: product.brand_name,
+          productBrand: product.brand.brand_name,
           quantity: product.quantity,
         };
       }),
     };
 
-    const total_price = checkoutCart.cartProducts.reduce((acc, p) => {
-      return acc + p.productFinalPrice * p.quantity;
-    }, 0);
+    const total_price = parseFloat(
+      checkoutCart.cartProducts
+        .reduce((acc, p) => {
+          return acc + p.productFinalPrice * p.quantity;
+        }, 0)
+        .toFixed(2)
+    );
 
     const final_price = total_price - (total_price * discountAmount) / 100;
 
@@ -83,10 +109,26 @@ const storeCheckoutTest = async (req, res) => {
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountToPay,
+      payment_method_types: ["card", "paypal", "klarna", "sepa_debit"], // SISTEMARE QUI I VARI METODI DI PAGAMENTO
       currency: "eur",
       metadata: {
-        email: email,
-        cartId: cart.id.toString(),
+        // DATI DA INSERIRE NEL DB TRAMITE IL WEBHOOK DI STRIPE
+        // DATI CLIENTE
+        email,
+        first_name,
+        last_name,
+        country,
+        city,
+        postal_code,
+        street,
+        civic_number,
+        // DATI ORDINE
+        // client_id LO PRENDIAMO DALL'insertId POI NEL WEBHOOK, DOPO AVER INSERITO I DATI DEL CLIENTE (RIFERIMENTO A CHECKOUT CONTROLLER OG)
+        total_price: total_price.toFixed(2),
+        shipping_price: shipping_price.toFixed(2),
+        discount,
+        // DATI TABELLA PRODUCTS_ORDERS
+        // da capire come passare i prodotti
       },
     });
 
@@ -102,7 +144,7 @@ const storeCheckoutTest = async (req, res) => {
       total_price: total_price.toFixed(2),
       final_price: final_price.toFixed(2),
       shipping_price: shipping_price.toFixed(2),
-      discountAmount: discountAmount.toFixed(2),
+      discount_code_id: discountCodeId,
     };
 
     res.json({
@@ -111,7 +153,8 @@ const storeCheckoutTest = async (req, res) => {
       clientSecret: paymentIntent.client_secret,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Error processing checkout:", err);
+    res.status(500).json({ error: err });
   }
 };
 
