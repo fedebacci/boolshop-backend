@@ -46,8 +46,9 @@ router.post(
         metadata.total_price,
         metadata.shipping_price,
         metadata.discount_code_id || null,
-        paymentIntent.id,
       ];
+
+      //   DA RIVEDERE PER BENE
 
       connection.query(insertOrderSql, values, (err, result) => {
         if (err) {
@@ -57,7 +58,7 @@ router.post(
         }
       });
 
-      // Qui puoi anche inviare la mail di conferma ordine!
+      // AGGIUNTA MAILER QUI
     }
 
     res.json({ received: true });

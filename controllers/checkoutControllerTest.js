@@ -3,6 +3,7 @@ const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY); // METTERE LA TUA CHIAVE SEGRETA DI STRIPE QUI
 
 const storeCheckoutTest = async (req, res) => {
+  const now = new Date();
   const {
     email,
     first_name,
@@ -40,7 +41,7 @@ const storeCheckoutTest = async (req, res) => {
     });
 
     const discountAmount =
-      discountResult.length > 0 ? discountResult[0].amount : 0;
+      discountResult.length > 0 ? parseInt(discountResult[0].amount) : 0;
     const discountCodeId =
       discountResult.length > 0 ? discountResult[0].id : null;
     const discountStart =
@@ -105,6 +106,10 @@ const storeCheckoutTest = async (req, res) => {
     const shipping_price = setShippingPrice(country, total_price);
 
     // CREA LA PAYMENT INTENT STRIPE
+    const productIds = checkoutCart.cartProducts
+      .map((p) => p.productId)
+      .join(",");
+
     const amountToPay = Math.round((final_price + shipping_price) * 100);
 
     const paymentIntent = await stripe.paymentIntents.create({
@@ -144,7 +149,8 @@ const storeCheckoutTest = async (req, res) => {
       total_price: total_price.toFixed(2),
       final_price: final_price.toFixed(2),
       shipping_price: shipping_price.toFixed(2),
-      discount_code_id: discountCodeId,
+      discountAmount: discountAmount,
+      product_ids: productIds,
     };
 
     res.json({
