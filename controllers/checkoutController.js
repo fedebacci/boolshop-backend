@@ -69,6 +69,38 @@ const storeCheckout = (req, res) => {
     // SE CODICE INSESISTENTE, CODICE SCONTO = 0
     const discountAmount =
       discountResult.length > 0 ? discountResult[0].amount : 0;
+    const discountCodeId =
+      discountResult.length > 0 ? discountResult[0].id : null;
+    const discountStart =
+      discountResult.length > 0 ? new Date(discountResult[0].start_date) : null;
+    const discountEnd =
+      discountResult.length > 0 ? new Date(discountResult[0].end_date) : null;
+
+    // DA CONTROLLARE COME MAI NON FUNZIONA CON DATE, PROBABILMENTE È UN PROBLEMA DI COMPARAZIONE STRINGHE
+
+    console.log("Data odierna:", now);
+    console.log("Data inizio sconto:", discountStart);
+    console.log("Data fine sconto:", discountEnd);
+    console.log("now < discountStart", now < discountStart);
+    console.log("now > discountEnd", now > discountEnd);
+    console.log("user_discount_code", user_discount_code);
+    console.log("user_discount_code !== ''", user_discount_code !== "");
+
+    if (user_discount_code !== "") {
+      if (!discountStart || !discountEnd) {
+        return res.status(400).json({ error: "Codice sconto non valido" });
+      }
+
+      if (now < discountStart || now > discountEnd) {
+        return res
+          .status(400)
+          .json({ error: "Codice sconto non valido o scaduto" });
+      }
+    }
+
+    // CALCOLO E PREPARAZIONE DEI DATI PER L'ORDINE
+
+    // ROBA CARRELLO
 
     const checkoutCart = {
       cartId: cart.id,
