@@ -1,39 +1,39 @@
 // const cart = require("../db/cart")
 const connection = require("../db/connection");
 
-cart = {
-  id: 1,
-  products: [
-    {
-      id: 1,
-      name: "Sauvage",
-      image_url: "",
-      // ?
-      gender_client: "male",
-      price: "90.00",
-      size_ml: 75,
-      // ?
-      size_name: "xs",
-      brand_name: "Dior",
-      discount_amount: 10,
-      quantity: 2,
-    },
-    {
-      id: 2,
-      name: "Miss Dior",
-      image_url: "",
-      // ?
-      gender_client: "female",
-      price: "100.00",
-      size_ml: 75,
-      // ?
-      size_name: "xs",
-      brand_name: "Dior",
-      discount_amount: 20,
-      quantity: 1,
-    },
-  ],
-};
+// cart = {
+//   id: 1,
+//   products: [
+//     {
+//       id: 1,
+//       name: "Sauvage",
+//       image_url: "",
+//       // ?
+//       gender_client: "male",
+//       price: "90.00",
+//       size_ml: 75,
+//       // ?
+//       size_name: "xs",
+//       brand_name: "Dior",
+//       discount_amount: 10,
+//       quantity: 2,
+//     },
+//     {
+//       id: 2,
+//       name: "Miss Dior",
+//       image_url: "",
+//       // ?
+//       gender_client: "female",
+//       price: "100.00",
+//       size_ml: 75,
+//       // ?
+//       size_name: "xs",
+//       brand_name: "Dior",
+//       discount_amount: 20,
+//       quantity: 1,
+//     },
+//   ],
+// };
 
 const storeCheckout = (req, res) => {
   // REQUIRE DEL CART (PER ORA HARD-CODATO)
