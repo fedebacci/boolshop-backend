@@ -364,8 +364,8 @@ const host = APP_PORT ? `${APP_URL}:${APP_PORT}` : APP_URL;
 const formatImage = (image) => {
   // console.debug(image);
   // * Definitivo da utilizzare in seguito
-  // return image ? `${host}/images/parfumes/${image}` : `${host}/images/parfumes/placeholder.jpg`;
-  return image ? `${host}/images/parfumes/Immagini Fede/${image}` : `${host}/images/parfumes/placeholder.jpg`;
+  return image ? `${host}/images/parfumes/${image}` : `${host}/images/parfumes/placeholder.jpg`;
+  // return image ? `${host}/images/parfumes/Immagini Fede/${image}` : `${host}/images/parfumes/placeholder.jpg`;
 };
 
 function formatIndexResults(r) {
