@@ -123,9 +123,9 @@ const storeCheckoutTest = async (req, res) => {
     const productsString = JSON.stringify(
       checkoutCart.cartProducts.map((p) => ({
         // PRODUCT ID
-        pI: p.productId,
+        I: p.productId,
         // PRODUCT QUANTITY
-        pQ: p.quantity,
+        Q: p.quantity,
       }))
     );
 

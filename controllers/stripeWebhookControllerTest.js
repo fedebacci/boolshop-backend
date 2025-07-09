@@ -95,8 +95,8 @@ router.post(
           `;
           const orderProductsValues = checkoutCart.map((p) => [
             orderId,
-            p.pI,
-            p.pQ,
+            p.I,
+            p.Q,
           ]);
 
           connection.query(orderProductsSql, [orderProductsValues], (err) => {
@@ -107,7 +107,7 @@ router.post(
               );
               return res.status(500).json({ error: err });
             }
-            const productIds = checkoutCart.map((p) => p.pI);
+            const productIds = checkoutCart.map((p) => p.I);
 
             const sql = `SELECT * FROM products WHERE id IN (?)`;
             connection.query(sql, [productIds], (err, products) => {
@@ -121,10 +121,10 @@ router.post(
 
               // RECAP DELL'ORDINE
               const recap = products.map((prod) => {
-                const cartItem = checkoutCart.find((p) => p.pI == prod.id);
+                const cartItem = checkoutCart.find((p) => p.I == prod.id);
                 return {
                   ...prod,
-                  quantity: cartItem ? cartItem.pQ : 0,
+                  quantity: cartItem ? cartItem.Q : 0,
                 };
               });
 
