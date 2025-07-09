@@ -81,6 +81,8 @@ router.post(
           paymentIntent.status,
         ];
 
+        // QUERY PER INSERIRE L'ORDINE
+
         connection.query(orderSql, orderValues, (err, orderResult) => {
           if (err) {
             console.error("Errore salvataggio ordine (orders):", err);
