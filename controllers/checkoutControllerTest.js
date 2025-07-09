@@ -111,9 +111,10 @@ const storeCheckoutTest = async (req, res) => {
     // I METADATA NON POSSONO SUPERARE I 500 CARATTERI,
     const productsString = JSON.stringify(
       checkoutCart.cartProducts.map((p) => ({
-        productId: p.productId,
-        productName: p.productName,
-        productQuantity: p.quantity,
+        // PRODUCT ID
+        pI: p.productId,
+        // PRODUCT QUANTITY
+        pQ: p.quantity,
       }))
     );
 
