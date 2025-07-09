@@ -162,12 +162,9 @@ router.post(
                           .map(
                             (product) => `
                           <li>
-                            <img src="${product.image_url}" alt="${product.name}" style="width:50px;height:50px;object-fit:cover;" />
-                            <div style="display:inline-block;">
                               <strong>Prodotto: </strong>${product.name} - (${product.size_ml}ml) <br /> 
                               <strong>Prezzo Originale: </strong> ${product.price}€ <br />
                               <strong>Quantità: </strong>${product.quantity} <br />
-                            </div>
                           </li>
                           <hr />`
                           )
