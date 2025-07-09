@@ -72,6 +72,9 @@ const storeCheckoutTest = async (req, res) => {
       }
     }
 
+
+    console.log("cart", cart);
+
     const checkoutCart = {
       cartProducts: cart.map((product) => {
         return {
@@ -88,6 +91,8 @@ const storeCheckoutTest = async (req, res) => {
         };
       }),
     };
+    
+    console.log("checkoutCart", checkoutCart);
 
     const total_price = parseFloat(
       checkoutCart.cartProducts
@@ -96,8 +101,10 @@ const storeCheckoutTest = async (req, res) => {
         }, 0)
         .toFixed(2)
     );
+    console.log("total_price", total_price);
 
     const final_price = total_price - (total_price * discountAmount) / 100;
+    console.log("final_price", final_price);
 
     const setShippingPrice = (country, total_price) => {
       let shipping_price;
@@ -116,6 +123,7 @@ const storeCheckoutTest = async (req, res) => {
     };
 
     const shipping_price = setShippingPrice(country, total_price);
+    console.log("shipping_price", shipping_price);
 
     // CREA LA PAYMENT INTENT STRIPE
 
@@ -129,8 +137,10 @@ const storeCheckoutTest = async (req, res) => {
         pQ: p.quantity,
       }))
     );
-
+    console.log("productsString", productsString);
+    
     const amountToPay = Math.round((final_price + shipping_price) * 100);
+    console.log("amountToPay", amountToPay);
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountToPay,
@@ -158,6 +168,8 @@ const storeCheckoutTest = async (req, res) => {
       },
     });
 
+    console.log("paymentIntent", paymentIntent);
+
     const orderRecap = {
       email,
       first_name,
@@ -173,6 +185,7 @@ const storeCheckoutTest = async (req, res) => {
       discountAmount: discountAmount,
       products: productsString,
     };
+    console.log("orderRecap", orderRecap);
 
     res.json({
       orderRecap,
@@ -182,6 +195,7 @@ const storeCheckoutTest = async (req, res) => {
   } catch (err) {
     console.error("Error processing checkout:", err);
     res.status(500).json({ error: err });
+    // throw new Error("Error processing checkout");
   }
 };
 
