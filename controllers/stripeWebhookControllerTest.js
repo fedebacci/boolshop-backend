@@ -27,12 +27,12 @@ router.post(
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // Gestisci solo il pagamento riuscito
+    // GESTIONE PAGAMENTO RIUSCITO
     if (event.type === "payment_intent.succeeded") {
       const paymentIntent = event.data.object;
       const metadata = paymentIntent.metadata;
 
-      // OLTRE 500 CARATTERI metadata VA IN ERRORE, PENSARE A UNA SOLUZIONE VALIDA
+      // OLTRE 500 CARATTERI metadata VA IN ERRORE, PENSARE A UNA SOLUZIONE VALIDA (CIRCA RISOLTO)
       let checkoutCart = [];
       try {
         checkoutCart = JSON.parse(metadata.products);
@@ -47,7 +47,6 @@ router.post(
       );
       console.log("Checkout Cart:", checkoutCart);
 
-      // Esempio: salva l'ordine nel database
       const clientSql = `
       INSERT INTO client_infos (client_email, client_firstname, client_lastname, client_country, client_city, client_postal_code, client_street, client_civic_number)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -62,8 +61,6 @@ router.post(
         metadata.street,
         metadata.civic_number,
       ];
-
-      //   DA RIVEDERE PER BENE
 
       connection.query(clientSql, clientValues, (err, clientResult) => {
         if (err) {
@@ -120,7 +117,7 @@ router.post(
                 return res.status(500).json({ error: err });
               }
 
-              // Crea un recap dettagliato
+              // RECAP DELL'ORDINE
               const recap = products.map((prod) => {
                 const cartItem = checkoutCart.find((p) => p.pI == prod.id);
                 return {
@@ -185,11 +182,8 @@ router.post(
           });
         });
       });
-      //   DA RIVEDERE PER BENE
-
-      // AGGIUNTA MAILER QUI
     } else {
-      // Rispondi sempre anche per eventi non gestiti
+      // RISPONDE A EVENTI NON GESTITI
       return res.status(200).json({ received: true });
     }
   }
