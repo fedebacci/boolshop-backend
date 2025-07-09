@@ -29,7 +29,8 @@ const storeCheckoutTest = async (req, res) => {
   ];
 
   // PRENDI E CONTROLLA CODICE SCONTO DAL DATABASE
-  const discountSql = "SELECT discount_codes.* FROM discount_codes WHERE code = ?";
+  const discountSql =
+    "SELECT discount_codes.* FROM discount_codes WHERE code = ?";
 
   console.log(req.body.cart);
   try {
@@ -57,8 +58,6 @@ const storeCheckoutTest = async (req, res) => {
     console.log("user_discount_code", user_discount_code);
     console.log("user_discount_code !== ''", user_discount_code !== "");
     console.log("discountResult", discountResult);
-
-
 
     if (user_discount_code !== "") {
       if (!discountStart || !discountEnd) {
@@ -132,9 +131,9 @@ const storeCheckoutTest = async (req, res) => {
     const productsString = JSON.stringify(
       checkoutCart.cartProducts.map((p) => ({
         // PRODUCT ID
-        pI: p.productId,
+        I: p.productId,
         // PRODUCT QUANTITY
-        pQ: p.quantity,
+        Q: p.quantity,
       }))
     );
     console.log("productsString", productsString);
@@ -144,7 +143,7 @@ const storeCheckoutTest = async (req, res) => {
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountToPay,
-      payment_method_types: ["card", "paypal", "klarna", "sepa_debit"], // SISTEMARE QUI I VARI METODI DI PAGAMENTO
+      payment_method_types: ["card"], // SISTEMARE QUI I VARI METODI DI PAGAMENTO
       currency: "eur",
       metadata: {
         // DATI DA INSERIRE NEL DB TRAMITE IL WEBHOOK DI STRIPE
