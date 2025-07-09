@@ -155,14 +155,17 @@ router.post(
                     ? metadata.discount_amount + "%"
                     : "Nessuno"
                 }</strong></p>
-                     <ul>
+                     <ul style="list-style:none;padding:0;margin:0;">
                         ${recap
                           .map(
                             (product) => `
                           <li>
-                            <strong>Prodotto: </strong>${product.name} - (${product.size_ml}ml) <br /> 
-                            <strong>Prezzo Originale: </strong> ${product.price}€ <br />
-                            <strong>Quantità: </strong>${product.quantity} <br />
+                            <img src="${product.image_url}" alt="${product.name}" style="width:50px;height:50px;object-fit:cover;" />
+                            <div style="display:inline-block;">
+                              <strong>Prodotto: </strong>${product.name} - (${product.size_ml}ml) <br /> 
+                              <strong>Prezzo Originale: </strong> ${product.price}€ <br />
+                              <strong>Quantità: </strong>${product.quantity} <br />
+                            </div>
                           </li>
                           <hr />`
                           )
