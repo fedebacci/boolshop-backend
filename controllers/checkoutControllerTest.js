@@ -29,7 +29,7 @@ const storeCheckoutTest = async (req, res) => {
   ];
 
   // PRENDI E CONTROLLA CODICE SCONTO DAL DATABASE
-  const discountSql = "SELECT amount FROM discount_codes WHERE code = ?";
+  const discountSql = "SELECT discount_codes.* FROM discount_codes WHERE code = ?";
 
   console.log(req.body.cart);
   try {
@@ -48,6 +48,18 @@ const storeCheckoutTest = async (req, res) => {
       discountResult.length > 0 ? new Date(discountResult[0].start_date) : null;
     const discountEnd =
       discountResult.length > 0 ? new Date(discountResult[0].end_date) : null;
+
+    console.log("Data odierna:", now);
+    console.log("Data inizio sconto:", discountStart);
+    console.log("Data fine sconto:", discountEnd);
+    console.log("now < discountStart", now < discountStart);
+    console.log("now > discountEnd", now > discountEnd);
+    console.log("user_discount_code", user_discount_code);
+    console.log("user_discount_code !== ''", user_discount_code !== "");
+    console.log("discountResult", discountResult);
+
+
+
     if (user_discount_code !== "") {
       if (!discountStart || !discountEnd) {
         return res.status(400).json({ error: "Codice sconto non valido" });
