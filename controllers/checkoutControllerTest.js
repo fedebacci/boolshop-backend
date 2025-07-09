@@ -106,7 +106,16 @@ const storeCheckoutTest = async (req, res) => {
     const shipping_price = setShippingPrice(country, total_price);
 
     // CREA LA PAYMENT INTENT STRIPE
-    const productsString = JSON.stringify(checkoutCart.cartProducts);
+
+    // RIDUCIAMO I CARATTERI DEL METADATA
+    // I METADATA NON POSSONO SUPERARE I 500 CARATTERI,
+    const productsString = JSON.stringify(
+      checkoutCart.cartProducts.map((p) => ({
+        productId: p.productId,
+        productName: p.productName,
+        productQuantity: p.quantity,
+      }))
+    );
 
     const amountToPay = Math.round((final_price + shipping_price) * 100);
 
@@ -130,6 +139,7 @@ const storeCheckoutTest = async (req, res) => {
         total_price: total_price.toFixed(2),
         shipping_price: shipping_price.toFixed(2),
         discount_code_id: discountCodeId,
+        discount_amount: discountAmount,
         // DATI TABELLA PRODUCTS_ORDERS
         products: productsString,
       },
