@@ -139,7 +139,7 @@ const showParfume = (req, res) => {
   connection.query(productSql, [slug], (err, productResult) => {
     if (err) return res.status(500).json({ error: err });
     if (productResult.length === 0)
-      return res.status(500).json({ error: "Product not found" });
+      return res.status(404).json({ error: "Product not found" });
     const product = formatIndexResults(productResult);
     connection.query(ingredientsSql, [product.id], (err, ingredientsResult) => {
       if (err) return res.status(500).json({ error: err });
@@ -400,7 +400,116 @@ function formatIndexResults(r) {
 const getFilteredProducts = (res, product_name, brand_id, gender, max_price, min_price, order_by, size, discounted) => {
   // ?  * discount_id (filtro nullo o presente, colonna nulla o presente --> 3 casi: si filtro si col, si filtro no col, no filtro)
   // * Dovrebbe essere undefined, true o false
-  console.debug("discounted", discounted);
+  // console.debug("discounted", discounted);
+
+
+
+  // # TEST VALIDAZIONE
+  // Validazione del filtro per price
+  // *min_price
+  if (min_price && isNaN(min_price)) {
+    return res.status(500).json(
+      { error: "Il prezzo minimo deve essere un numero." }
+    );
+  }
+  if (min_price && Number(min_price) < 0) {
+    return res.status(500).json(
+      { error: "Il prezzo minimo non può essere minore di 0." }
+    );
+  }
+  if (min_price && Number(min_price) > 1000) {
+    return res.status(500).json(
+      { error: "Il prezzo minimo non può essere maggiore di 1000." }
+    );
+  }
+
+  // *max_price
+  if (max_price && isNaN(max_price)) {
+    return res.status(500).json(
+      { error: "Il prezzo massimo deve essere un numero." }
+    );
+  }
+  if (max_price && Number(max_price) < 0) {
+    return res.status(500).json(
+      { error: "Il prezzo massimo non può essere minore di 0." }
+    );
+  }
+  if (max_price && Number(max_price) > 1000) {
+    return res.status(500).json(
+      { error: "Il prezzo massimo non può essere maggiore di 1000." }
+    );
+  }
+
+  // *max_price E min_price
+  if (
+    min_price &&
+    max_price &&
+    parseFloat(min_price) > parseFloat(max_price)
+  ) {
+    return res.status(500).json(
+      { error: "Il prezzo minimo non può essere maggiore del prezzo massimo." }
+    );
+  }
+
+  // Validazione del filtro nome del prodotto
+  if (product_name && product_name.length > 50) {
+    return res.status(500).json(
+      { error: "Il nome del prodotto non può essere più lungo di 50 caratteri." }
+    );
+  }
+
+  // Validazione del filtro brand
+  // todo: decidere se mantenere controllo su brand_slug, spostare controllo su brand_id o eliminare
+  // if (
+  //   tempBrandSlug &&
+  //   ![
+  //     "dior",
+  //     "chanel",
+  //     "calvin_klein",
+  //     "giorgio_armani",
+  //     "maison_lumière",
+  //     "nordica_scents",
+  //   ].includes(tempBrandSlug)
+  // ) {
+  //   alert(
+  //     "Marca non valida. Scegli tra una di queste: Dior, Chanel, Calvin Klein, Giorgio Armani, Maison Lumière, Nordica Scents."
+  //   );
+  //   return;
+  // }
+
+  // Validazione del filtro size
+  if (size && !["xs", "s", "m", "l", "xl", "xxl"].includes(size)) {
+    return res.status(500).json(
+      { error: "Formato non valido. Scegli tra xs, s, m, l, xl, xxl." }
+    );
+  }
+
+  // Validazione del filtro genere
+  if (gender && !["male", "female", "unisex"].includes(gender)) {
+    return res.status(500).json(
+      { error: "Genere non valido. Scegli tra Uomo, Donna o Unisex." }
+    );
+  }
+
+  // validazione del filtro per ordinamento
+  const validOrderBy = [
+    "",
+    "products.price ASC",
+    "products.price DESC",
+    "products.name ASC",
+    "products.name DESC",
+    "products.size_ml ASC",
+    "products.size_ml DESC",
+  ];
+  if (order_by && !validOrderBy.includes(order_by)) {
+    return res.status(500).json(
+      { error: "Ordinamento non valido." }
+    );
+  }
+
+
+
+
 
 
   const sqlFilters = [];
