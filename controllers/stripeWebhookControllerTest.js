@@ -6,7 +6,7 @@ const connection = require("../db/connection");
 
 // Stripe richiede il body RAW per la verifica della firma!
 router.post(
-  "/webhook/stripe",
+  "/",
   express.raw({ type: "application/json" }),
   async (req, res) => {
     const sig = req.headers["stripe-signature"];
@@ -27,6 +27,11 @@ router.post(
     if (event.type === "payment_intent.succeeded") {
       const paymentIntent = event.data.object;
       const metadata = paymentIntent.metadata;
+      const checkoutCart = JSON.parse(metadata.products);
+      console.log(
+        "------------------------------------------------------------------"
+      );
+      console.log("Checkout Cart:", checkoutCart);
 
       // Esempio: salva l'ordine nel database
       const insertOrderSql = `
@@ -46,6 +51,7 @@ router.post(
         metadata.total_price,
         metadata.shipping_price,
         metadata.discount_code_id || null,
+        metadata.products,
       ];
 
       //   DA RIVEDERE PER BENE

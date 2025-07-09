@@ -13,6 +13,8 @@ const app = express();
 const { APP_URL, APP_PORT } = process.env;
 const host = APP_PORT ? `${APP_URL}:${APP_PORT}` : APP_URL;
 
+app.use("/webhook/stripe", stripeWebhook);
+
 // # MIDDLEWARES
 // - public: serves public files
 app.use(express.static("public"));
@@ -41,7 +43,6 @@ app.get("/", (req, res) => {
 // # ROUTERS
 app.use("/parfumes", parfumesRouter);
 app.use("/checkout", checkoutRouter);
-app.use(stripeWebhook);
 
 // # ERROR HANDLING MIDDLEWARES
 app.use(notFound);

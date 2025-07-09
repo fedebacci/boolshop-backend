@@ -106,9 +106,7 @@ const storeCheckoutTest = async (req, res) => {
     const shipping_price = setShippingPrice(country, total_price);
 
     // CREA LA PAYMENT INTENT STRIPE
-    const productIds = checkoutCart.cartProducts
-      .map((p) => p.productId)
-      .join(",");
+    const productsString = JSON.stringify(checkoutCart.cartProducts);
 
     const amountToPay = Math.round((final_price + shipping_price) * 100);
 
@@ -133,7 +131,7 @@ const storeCheckoutTest = async (req, res) => {
         shipping_price: shipping_price.toFixed(2),
         discount_code_id: discountCodeId,
         // DATI TABELLA PRODUCTS_ORDERS
-        // da capire come passare i prodotti
+        products: productsString,
       },
     });
 
@@ -150,7 +148,7 @@ const storeCheckoutTest = async (req, res) => {
       final_price: final_price.toFixed(2),
       shipping_price: shipping_price.toFixed(2),
       discountAmount: discountAmount,
-      product_ids: productIds,
+      products: productsString,
     };
 
     res.json({
