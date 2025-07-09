@@ -188,6 +188,9 @@ router.post(
       //   DA RIVEDERE PER BENE
 
       // AGGIUNTA MAILER QUI
+    } else {
+      // Rispondi sempre anche per eventi non gestiti
+      return res.status(200).json({ received: true });
     }
   }
 );
