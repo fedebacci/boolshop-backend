@@ -38,7 +38,9 @@ router.post(
         checkoutCart = JSON.parse(metadata.products);
       } catch (e) {
         console.error("Errore parsing products metadata:", e);
-        // Puoi anche rispondere con errore qui
+        return res
+          .status(400)
+          .json({ error: "Errore parsing products metadata" });
       }
       console.log(
         "------------------------------------------------------------------"
@@ -65,7 +67,8 @@ router.post(
 
       connection.query(clientSql, clientValues, (err, clientResult) => {
         if (err) {
-          console.error("Errore salvataggio ordine:", err);
+          console.error("Errore salvataggio ordine (client_infos):", err);
+          return res.status(500).json({ error: err });
         }
         const clientId = clientResult.insertId;
 
@@ -82,7 +85,10 @@ router.post(
         ];
 
         connection.query(orderSql, orderValues, (err, orderResult) => {
-          if (err) return res.status(500).json({ error: err });
+          if (err) {
+            console.error("Errore salvataggio ordine (orders):", err);
+            return res.status(500).json({ error: err });
+          }
           const orderId = orderResult.insertId;
           const orderProductsSql = `
             INSERT INTO products_orders (orders_id, products_id, quantity)
@@ -90,28 +96,57 @@ router.post(
           `;
           const orderProductsValues = checkoutCart.map((p) => [
             orderId,
-            p.productId,
-            p.productQuantity,
+            p.pI,
+            p.pQ,
           ]);
 
           connection.query(orderProductsSql, [orderProductsValues], (err) => {
-            if (err) return res.status(500).json({ error: err });
-            const transporter = nodemailer.createTransport({
-              host: "smtp.gmail.com",
-              port: 587, // 465 per SSL
-              secure: false, // true per 465, false per altri
-              auth: {
-                user: HOST_MAIL,
-                pass: APP_PW_HOST,
-              },
-            });
+            if (err) {
+              console.error(
+                "Errore salvataggio ordine (products_orders):",
+                err
+              );
+              return res.status(500).json({ error: err });
+            }
+            const productIds = checkoutCart.map((p) => p.pI);
 
-            const mailOptions = {
-              from: HOST_MAIL,
-              to: metadata.email,
-              subject: "Conferma Ordine Boolshop Parfumes",
-              text: `Grazie per il tuo ordine! ID Ordine: ${orderId}`,
-              html: `
+            const sql = `SELECT * FROM products WHERE id IN (?)`;
+            connection.query(sql, [productIds], (err, products) => {
+              if (err) {
+                console.error(
+                  "Errore salvataggio ordine (products SELECT):",
+                  err
+                );
+                return res.status(500).json({ error: err });
+              }
+
+              // Crea un recap dettagliato
+              const recap = products.map((prod) => {
+                const cartItem = checkoutCart.find((p) => p.pI == prod.id);
+                return {
+                  ...prod,
+                  quantity: cartItem ? cartItem.pQ : 0,
+                };
+              });
+
+              console.log("Recap:", recap);
+
+              const transporter = nodemailer.createTransport({
+                host: "smtp.gmail.com",
+                port: 587, // 465 per SSL
+                secure: false, // true per 465, false per altri
+                auth: {
+                  user: HOST_MAIL,
+                  pass: APP_PW_HOST,
+                },
+              });
+
+              const mailOptions = {
+                from: HOST_MAIL,
+                to: metadata.email,
+                subject: "Conferma Ordine Boolshop Parfumes",
+                text: `Grazie per il tuo ordine! ID Ordine: ${orderId}`,
+                html: `
               <h2>Grazie per il tuo ordine!</h2>
               <h4> ID Ordine: ${orderId}</h4>
                      <p>Totale: <strong>${metadata.total_price}€</strong></p>
@@ -124,27 +159,29 @@ router.post(
                     : "Nessuno"
                 }</strong></p>
                      <ul>
-                        ${checkoutCart
+                        ${recap
                           .map(
                             (product) => `
                           <li>
-                            ${product.productName} - 
-                            <strong>Quantità: ${product.productQuantity}</strong>
-                          </li>`
+                            <strong>Prodotto: </strong>${product.name} - (${product.size_ml}ml) <br /> 
+                            <strong>Prezzo Originale: </strong> ${product.price}€ <br />
+                            <strong>Quantità: </strong>${product.quantity} <br />
+                          </li>
+                          <hr />`
                           )
                           .join("")}
                      </ul>`,
-            };
+              };
 
-            transporter.sendMail(mailOptions, (error, info) => {
-              if (error) {
-                console.error("Errore nell'invio dell'email:", error);
-              } else {
-                console.log("Email inviata:", info.response);
-              }
+              transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                  console.error("Errore nell'invio dell'email:", error);
+                } else {
+                  console.log("Email inviata:", info.response);
+                  res.json({ received: true });
+                }
+              });
             });
-
-            res.json({ received: true });
           });
         });
       });
