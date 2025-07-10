@@ -204,8 +204,8 @@ router.post(
                          ? metadata.shipping_price + "€"
                          : "Gratuita"
                      }</strong></p>
-                     }€</strong></p>
-                <p>Sconto Applicato: <strong>${
+                     </strong></p>
+                <p>Codice sconto Applicato: <strong>${
                   metadata.discount_amount != 0
                     ? metadata.discount_amount + "%"
                     : "Nessuno"
