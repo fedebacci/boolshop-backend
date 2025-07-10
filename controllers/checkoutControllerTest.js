@@ -187,6 +187,7 @@ const storeCheckoutTest = async (req, res) => {
         // DATI ORDINE
         // client_id LO PRENDIAMO DALL'insertId POI NEL WEBHOOK, DOPO AVER INSERITO I DATI DEL CLIENTE (RIFERIMENTO A CHECKOUT CONTROLLER OG)
         total_price: total_price.toFixed(2),
+        payed: (amountToPay / 100).toFixed(2),
         shipping_price: shipping_price.toFixed(2),
         discount_code_id: discountCodeId,
         discount_amount: discountAmount,

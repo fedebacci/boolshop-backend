@@ -196,15 +196,21 @@ router.post(
                 html: `
               <h2>Grazie per il tuo ordine!</h2>
               <h4> ID Ordine: ${orderId}</h4>
-                     <p>Totale: <strong>${metadata.total_price}€</strong></p>
-                     <p>Spedizione: <strong>${
-                       metadata.shipping_price
+                     <p>Prezzo iniziale: <strong>${
+                       metadata.total_price
+                     }€</strong></p>
+                     <p>Prezzo spedizione: <strong>${
+                       metadata.shipping_price > 0
+                         ? metadata.shipping_price + "€"
+                         : "Gratuita"
+                     }</strong></p>
                      }€</strong></p>
                 <p>Sconto Applicato: <strong>${
                   metadata.discount_amount != 0
                     ? metadata.discount_amount + "%"
                     : "Nessuno"
                 }</strong></p>
+                <p>Prezzo finale: <strong>${metadata.payed}</strong></p>
                      <ul style="list-style:none;padding:0;margin:0;">
                         ${recap
                           .map(
