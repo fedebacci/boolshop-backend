@@ -198,7 +198,7 @@ router.post(
               <h4> ID Ordine: ${orderId}</h4>
                      <p>Prezzo iniziale: <strong>${
                        metadata.total_price
-                     }€</strong></p>
+                     } €</strong></p>
                      <p>Costo spedizione: <strong>${
                        metadata.shipping_price > 0
                          ? metadata.shipping_price + " €"
