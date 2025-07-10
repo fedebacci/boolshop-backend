@@ -228,7 +228,9 @@ router.post(
                               }€ <br />
                               ${
                                 product.discount_amount > 0
-                                  ? "<strong>Prezzo Scontato: </strong>" +
+                                  ? "<strong>Prezzo Scontato(" +
+                                    product.discount_amount +
+                                    "%) : </strong>" +
                                     (
                                       parseFloat(product.price) -
                                       (parseFloat(product.price) *
