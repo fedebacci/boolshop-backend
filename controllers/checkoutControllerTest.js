@@ -17,6 +17,35 @@ const storeCheckoutTest = async (req, res) => {
     cart,
   } = req.body;
 
+  // Validazioni campi obbligatori
+  const requiredFields = [
+    email,
+    first_name,
+    last_name,
+    country,
+    city,
+    postal_code,
+    street,
+    civic_number,
+    cart,
+  ];
+  const isEmpty = (val) =>
+    val === undefined ||
+    val === null ||
+    (typeof val === "string" && val.trim() === "");
+
+  // Controlla che tutti i campi obbligatori siano presenti e non vuoti
+  if (
+    requiredFields.some(isEmpty) ||
+    !Array.isArray(cart) ||
+    cart.length === 0 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  ) {
+    return res
+      .status(400)
+      .json({ error: "Dati obbligatori mancanti o non validi" });
+  }
+
   const clientInfosValues = [
     email,
     first_name,
@@ -71,7 +100,6 @@ const storeCheckoutTest = async (req, res) => {
       }
     }
 
-
     console.log("cart", cart);
 
     const checkoutCart = {
@@ -90,7 +118,7 @@ const storeCheckoutTest = async (req, res) => {
         };
       }),
     };
-    
+
     console.log("checkoutCart", checkoutCart);
 
     const total_price = parseFloat(
@@ -137,7 +165,7 @@ const storeCheckoutTest = async (req, res) => {
       }))
     );
     console.log("productsString", productsString);
-    
+
     const amountToPay = Math.round((final_price + shipping_price) * 100);
     console.log("amountToPay", amountToPay);
 

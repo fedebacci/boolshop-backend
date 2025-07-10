@@ -42,6 +42,38 @@ router.post(
           .status(400)
           .json({ error: "Errore parsing products metadata" });
       }
+
+      // Controlli aggiuntivi sui dati ricevuti
+      const requiredFields = [
+        metadata.email,
+        metadata.first_name,
+        metadata.last_name,
+        metadata.country,
+        metadata.city,
+        metadata.postal_code,
+        metadata.street,
+        metadata.civic_number,
+        metadata.total_price,
+        metadata.shipping_price,
+        metadata.products,
+      ];
+      const isEmpty = (val) =>
+        val === undefined ||
+        val === null ||
+        (typeof val === "string" && val.trim() === "");
+      if (
+        requiredFields.some(isEmpty) ||
+        !Array.isArray(checkoutCart) ||
+        checkoutCart.length === 0 ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(metadata.email) ||
+        isNaN(Number(metadata.total_price)) ||
+        isNaN(Number(metadata.shipping_price))
+      ) {
+        return res
+          .status(400)
+          .json({ error: "Dati obbligatori mancanti o non validi" });
+      }
+
       console.log(
         "------------------------------------------------------------------"
       );
