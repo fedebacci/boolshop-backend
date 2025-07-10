@@ -135,7 +135,7 @@ const storeCheckoutTest = async (req, res) => {
 
     const setShippingPrice = (country, total_price) => {
       let shipping_price;
-      if (total_price > 100.0) {
+      if (total_price >= 100.0) {
         shipping_price = 0;
       } else if (country === "italy") {
         shipping_price = 2.99;
