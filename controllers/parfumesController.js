@@ -561,20 +561,20 @@ const getFilteredProducts = (res, product_name, brand_id, gender, max_price, min
   if (max_price) {
     sqlFilters.length === 0
       ? (sql += `
-        WHERE products.price < ?
+        WHERE products.price <= ?
       `)
       : (sql += `
-        AND products.price < ?
+        AND products.price <= ?
       `);
     sqlFilters.push(max_price);
   }
   if (min_price) {
     sqlFilters.length === 0
       ? (sql += `
-        WHERE products.price > ?
+        WHERE products.price >= ?
       `)
       : (sql += `
-        AND products.price > ?
+        AND products.price >= ?
       `);
     sqlFilters.push(min_price);
   }
@@ -628,13 +628,49 @@ const getFilteredProducts = (res, product_name, brand_id, gender, max_price, min
   
   connection.query(sql, sqlFilters, (err, results) => {
 
+    
     if (err) return res.status(500).json({ error: err });
     if (!results.length)
       return res
         .status(404)
         .json({ pageErrorMessage: `I criteri per la ricerca non hanno fornito nessun risultato.` });
 
-    res.json(formatIndexResults(results));
+
+    // console.log("order_by", order_by);
+    // console.log("results", results);
+    // if (order_by) {
+    //   if (order_by.includes("price")) {
+    //     console.debug("Ordinamento per prezzo");
+    //   }
+    //   if (order_by.includes("ASC")) {
+    //     console.debug("Ordinamento in ordine crescente");
+    //   }
+    //   if (order_by.includes("DESC")) {
+    //     console.debug("Ordinamento in ordine decrescente");
+    //   }
+    // }
+
+
+    let orderedResults = results;
+    if (order_by && order_by.includes("price")) {
+      const direction = order_by.includes("ASC") ? "crescente" : "decrescente";
+      if (direction === "crescente") {
+        orderedResults = results.sort((firstResult, secondResult) => (firstResult.price - (firstResult.price * firstResult.discount_amount) / 100) - (secondResult.price - (secondResult.price * secondResult.discount_amount) / 100));
+      } else if (direction === "decrescente") {
+        orderedResults = results.sort((firstResult, secondResult) => (secondResult.price - (secondResult.price * secondResult.discount_amount) / 100) - (firstResult.price - (firstResult.price * firstResult.discount_amount) / 100));
+      }
+    }
+
+
+    if (max_price) {
+      orderedResults = orderedResults.filter(result => result.price - (result.price * result.discount_amount) / 100 <= max_price);
+    }
+    if (min_price) {
+      orderedResults = orderedResults.filter(result => result.price - (result.price * result.discount_amount) / 100 >= min_price);
+    }
+
+
+    res.json(formatIndexResults(orderedResults));
   });
 }
 
