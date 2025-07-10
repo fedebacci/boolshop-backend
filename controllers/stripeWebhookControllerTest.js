@@ -141,7 +141,23 @@ router.post(
             }
             const productIds = checkoutCart.map((p) => p.I);
 
-            const sql = `SELECT * FROM products WHERE id IN (?)`;
+            const sql = `
+                  SELECT 
+                    products.*,      
+                    brands.name AS brand_name, 
+                    brands.logo AS brand_logo,
+                    discounts.amount AS discount_amount
+
+                  FROM products
+
+                  INNER JOIN brands 
+                  ON products.brand_id = brands.id
+
+                  LEFT JOIN discounts 
+                  ON discounts.id = products.discount_id
+                  
+                  WHERE products.id IN (?)`;
+
             connection.query(sql, [productIds], (err, products) => {
               if (err) {
                 console.error(
@@ -194,9 +210,29 @@ router.post(
                           .map(
                             (product) => `
                           <li>
-                              <strong>Prodotto: </strong>${product.name} - (${product.size_ml}ml) <br /> 
-                              <strong>Prezzo Originale: </strong> ${product.price}€ <br />
-                              <strong>Quantità: </strong>${product.quantity} <br />
+                              <strong>Prodotto: </strong>${product.name} - (${
+                              product.size_ml
+                            }ml) 
+                              <br /> 
+                              <strong>Brand : </strong>${
+                                product.brand_name
+                              } <br />
+                              <strong>Prezzo Originale: </strong> ${
+                                product.price
+                              }€ <br />
+                              ${
+                                product.discount_amount > 0
+                                  ? "<strong>Prezzo Scontato: </strong>" +
+                                    (
+                                      parseFloat(product.price) -
+                                      (parseFloat(product.price) *
+                                        parseFloat(product.discount_amount)) /
+                                        100
+                                    ).toFixed(2) +
+                                    "€  <br />"
+                                  : ""
+                              } 
+                              <strong>Quantità: </strong>${product.quantity}
                           </li>
                           <hr />`
                           )
