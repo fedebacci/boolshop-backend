@@ -201,16 +201,18 @@ router.post(
                      }€</strong></p>
                      <p>Costo spedizione: <strong>${
                        metadata.shipping_price > 0
-                         ? metadata.shipping_price + "€"
+                         ? metadata.shipping_price + " €"
                          : "Gratuita"
                      }</strong></p>
                      </strong></p>
                 <p>Percentuale codice sconto applicato: <strong>${
                   metadata.discount_amount != 0
-                    ? metadata.discount_amount + "%"
+                    ? metadata.discount_amount + " %"
                     : "Nessuno"
                 }</strong></p>
-                <p>Prezzo finale pagato: <strong>${metadata.payed}</strong></p>
+                <p>Prezzo finale pagato: <strong>${
+                  metadata.payed
+                } €</strong></p>
                      <ul style="list-style:none;padding:0;margin:0;">
                         ${recap
                           .map(
@@ -225,19 +227,19 @@ router.post(
                               } <br />
                               <strong>Prezzo Originale: </strong> ${
                                 product.price
-                              }€ <br />
+                              } €<br />
                               ${
                                 product.discount_amount > 0
-                                  ? "<strong>Prezzo Scontato(" +
+                                  ? "<strong>Prezzo Scontato (" +
                                     product.discount_amount +
-                                    "%): </strong>" +
+                                    " %): </strong>" +
                                     (
                                       parseFloat(product.price) -
                                       (parseFloat(product.price) *
                                         parseFloat(product.discount_amount)) /
                                         100
                                     ).toFixed(2) +
-                                    "€  <br />"
+                                    " €<br />"
                                   : ""
                               } 
                               <strong>Quantità: </strong>${product.quantity}
